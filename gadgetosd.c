@@ -4,6 +4,7 @@
  */
 
 
+#include "version.h"
 #include "mongoose.h"
 
 static const char *s_http_port = "31415";
@@ -20,6 +21,10 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
       } else if (mg_vcmp(&hm->uri, "/api/v1/shutdown") == 0) {
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
         mg_printf_http_chunk(nc, "SHUTDOWN!\r\n\r\n");
+        mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+      } else if (mg_vcmp(&hm->uri, "/api/v1/version") == 0) {
+        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
+        mg_printf_http_chunk(nc, "GadgetOSD %d.%d.%d", GADGETOSD_MAJOR, GADGETOSD_MINOR, GADGETOSD_BUGFIX );
         mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
       } else { 
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
@@ -64,7 +69,7 @@ int main(int argc, char *argv[]) {
 
   mg_set_protocol_http_websocket(nc);
 
-  printf("GadgetOSD on port %s", s_http_port);
+  printf("GadgetOSD %d.%d.%d on port %s", GADGETOSD_MAJOR, GADGETOSD_MINOR, GADGETOSD_BUGFIX,s_http_port);
 
   while (1) {
     mg_mgr_poll(&mgr, 1000);
