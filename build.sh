@@ -10,3 +10,5 @@ tar xzvf $MONGOOSE_TAR
 
 cp mongoose-$MONGOOSE_VER/mongoose.c .
 cp mongoose-$MONGOOSE_VER/mongoose.h .
+
+make
