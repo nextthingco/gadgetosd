@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-I. -O2
 DEPS = mongoose.h
-OBJ = gadget.o gadgetosd.o mongoose.o main.o
+OBJ = main.o mongoose.o gadgetosd.o gadget.o gadget_new.o gadget_build.o gadget_deploy.o
 
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
