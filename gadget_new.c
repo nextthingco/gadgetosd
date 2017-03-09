@@ -15,7 +15,10 @@ void help()
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
-            "  -t TYPE, --type=TYPE  specify project type (default:docker)\n"
+            "  -t TYPE, --type=TYPE  specify project type (default: docker)\n"
+            "\n"
+            "project types:\n"
+            "  docker                Docker based project\n"
           );
 }
 
