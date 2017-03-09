@@ -43,7 +43,7 @@ int gadget(int argc, char **argv)
 
     for(i=0; commands[i].name; i++) {
         if(!strcmp(argv[1],commands[i].name))
-            return commands[i].function(argc,argv);
+            return commands[i].function(argc-1,&argv[1]);
     }
 
     printf("gadget: '%s' is not a gadget command. Try %s --help.\n",argv[1],argv[0]);
@@ -52,7 +52,7 @@ int gadget(int argc, char **argv)
 int gadget_help(int argc, char **argv)
 {
     printf(
-"Create embbeded Linux apps - easy.\n"
+"Create embedded Linux apps - easy.\n"
 "\n"
 "usage: gadget <command> [<args>]\n"
 "\n"
