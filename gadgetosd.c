@@ -37,7 +37,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
   }
 }
 
-int main(int argc, char *argv[]) {
+int gadgetosd(int argc, char *argv[]) {
   struct mg_mgr mgr;
   struct mg_connection *nc;
   struct mg_bind_opts bind_opts;
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
   mg_set_protocol_http_websocket(nc);
 
-  printf("GadgetOSD %d.%d.%d on port %s", GADGETOSD_MAJOR, GADGETOSD_MINOR, GADGETOSD_BUGFIX,s_http_port);
+  fprintf(stderr,"GadgetOSD %d.%d.%d on port %s\n\n", GADGETOSD_MAJOR, GADGETOSD_MINOR, GADGETOSD_BUGFIX,s_http_port);
 
   while (1) {
     mg_mgr_poll(&mgr, 1000);
