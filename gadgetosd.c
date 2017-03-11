@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mongoose.h"
+#include "gadgetosd_docker.h"
 
 #ifndef MG_ENABLE_HTTP_STREAMING_MULTIPART
 #error MG_ENABLE_HTTP_STREAMING_MULTIPART not defined
@@ -36,6 +37,7 @@ static void handle_upload(struct mg_connection *nc, int ev, void *p) {
 
   switch (ev) {
     case MG_EV_HTTP_PART_BEGIN: {
+      //fprintf(stderr,"MG_EV_HTTP_PART_BEGIN\n");
       if (data == NULL) {
         data = calloc(1, sizeof(struct file_writer_data));
         //data->fp = tmpfile();
@@ -54,9 +56,8 @@ static void handle_upload(struct mg_connection *nc, int ev, void *p) {
       break;
     }
     case MG_EV_HTTP_PART_DATA: {
-      fprintf(stderr,"MG_EV_HTTP_PART_DATA: len=%d\n",mp->data.len);
-      fwrite(mp->data.p,1, mp->data.len, stderr);
-      fprintf(stderr,"\n\n");
+      //fprintf(stderr,"MG_EV_HTTP_PART_DATA: len=%d\n",mp->data.len);
+      //fwrite(mp->data.p,1, mp->data.len, stderr);
       if (fwrite(mp->data.p, 1, mp->data.len, data->fp) != mp->data.len) {
         fprintf(stderr,"FAIL\n\n");
         mg_printf(nc, "%s",
@@ -70,6 +71,7 @@ static void handle_upload(struct mg_connection *nc, int ev, void *p) {
       break;
     }
     case MG_EV_HTTP_PART_END: {
+      //fprintf(stderr,"MG_EV_HTTP_PART_END\n");
       mg_printf(nc,
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: text/plain\r\n"
@@ -86,6 +88,7 @@ static void handle_upload(struct mg_connection *nc, int ev, void *p) {
         fprintf(stderr,"unknown: %d\n",ev);
   }
 }
+
 
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
@@ -107,6 +110,7 @@ int gadgetosd(int argc, char **argv) {
   nc = mg_bind(&mgr, GADGETOSD_PORT, ev_handler);
 
   mg_register_http_endpoint(nc, "/upload", handle_upload);
+  mg_register_http_endpoint(nc, "/docker/import", handle_docker_import);
   // Set up HTTP server parameters
   mg_set_protocol_http_websocket(nc);
 

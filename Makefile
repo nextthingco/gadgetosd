@@ -1,7 +1,10 @@
 CC=gcc
 CFLAGS=-I. -O2
 DEPS = mongoose.h
-OBJ = main.o mongoose.o gadgetosd.o gadget.o gadget_new.o gadget_build.o gadget_deploy.o
+LIBS= -luuid
+OBJ = main.o mongoose.o \
+gadgetosd.o gadgetosd_docker.o \
+gadget.o gadget_new.o gadget_build.o gadget_deploy.o
 
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
@@ -11,7 +14,7 @@ MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 all: gadgetosd gadget
 
 gadgetosd: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS)
+	gcc -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 gadget: gadgetosd
 	ln -s gadgetosd gadget

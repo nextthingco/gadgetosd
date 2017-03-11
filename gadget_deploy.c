@@ -11,8 +11,8 @@ extern char* GADGETOSD_SERVER;
 extern char* GADGETOSD_PORT;
 
 /* RESTful server host and request URI */
-const static int s_url_len=1024;
-static char s_url[s_url_len];
+static const int s_url_len=1024;
+static char s_url[1024];
 static int s_exit_flag = 0;
 
 
@@ -50,39 +50,6 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
   }
 }
 
-int encode_chunk(char *boundary, char *name, const char *filename, FILE* fp, int chunksize, char **buf, int *buf_len)
-{
-    static char* format=
-"--%s\r\n"
-"Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n"
-"Content-Type: application/octet-stream\r\n"
-"Content-Transfer-Encoding: binary\r\n"
-"\r\n";
-
-    int len = strlen(boundary)
-            + strlen(name)
-            + strlen(filename)
-            + strlen(format)
-            + chunksize
-            + 4    //for trailing \r\n\r\n
-            + 1;   //for termination \0
-
-    int pos = 0;
-    size_t read = 0;
-
-    *buf=realloc(*buf,sizeof(char)*len);
-
-    snprintf(*buf,len,format,boundary,name,filename);
-    pos = strlen(*buf); 
-    
-    read=fread((*buf)+pos,sizeof(char),chunksize,fp);
-    //fprintf(stderr,"read %lu bytes from %s\n",read,filename);
-    snprintf((*buf)+pos+read,3,"\r\n");
-    *buf_len = pos+read+2;
-
-    return 0;
-}
-
 
 struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
                                       mg_event_handler_t ev_handler,
@@ -97,8 +64,9 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
   uuid_t uuid;
   char boundary[33];
   char debug[1024*1024];
-  char *buf = 0;
-  int buf_len;
+  const int buf_len=2048;
+  char buf[buf_len];
+  int read=0;
 
   memset(&opts, 0, sizeof(opts));
 
@@ -125,27 +93,31 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
   }
  
   snprintf(debug,1024*1024,
-                "POST %s HTTP/1.1\r\n"
-                "Host: %s\r\n"
-                "Content-Length: %" SIZE_T_FMT "\r\n"
-                "Content-Type: multipart/form-data; boundary=%s\r\n"
-                "%.*s\r\n\r\n",
+           "POST %s HTTP/1.1\r\n"
+           "Host: %s\r\n"
+           "Content-Length: %" SIZE_T_FMT "\r\n"
+           "Content-Type: multipart/form-data; boundary=%s\r\n"
+           "%.*s\r\n"
+           "\r\n"
+           "--%s\r\n"
+           "Content-Disposition: form-data; name=\"FILE1\"; filename=\"%s\"\r\n"
+           "Content-Type: application/octet-stream\r\n"
+           "Content-Transfer-Encoding: binary\r\n"
+           "\r\n",
             path, addr, 2*filesize, boundary,
-            (int) auth.len, (auth.buf == NULL ? "" : auth.buf) );
+            (int) auth.len, (auth.buf == NULL ? "" : auth.buf),
+            boundary, filename);
   fputs(debug,stderr);
 
   mg_printf(nc,debug);
 
   while(! feof(fp) ) {
-      encode_chunk(boundary,"FILE1",filename,fp,1024,&buf,&buf_len);
-      //fprintf(stderr,"[[[strlen(buf)=%lu]]]\n",strlen(buf));
-      fputs(buf,stderr);
-      fprintf(stderr,"[[[sending %d bytes]]]\n",buf_len);
-      mg_send(nc,buf,buf_len);
+      read=fread(buf,sizeof(char),buf_len,fp);
+      //fwrite(buf,sizeof(char),read,stderr);
+      mg_send(nc,buf,read);
   }
-  mg_printf(nc,"--%s--\r\n",boundary);
-  fprintf(stderr,"--%s--\r\n",boundary);
-  free(buf);
+  mg_printf(nc,"\r\n--%s--\r\n",boundary);
+  fprintf(stderr,"\r\n--%s--\r\n",boundary);
 
   fclose(fp);
   mbuf_free(&auth);
@@ -158,7 +130,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
 
 int gadget_deploy(int arvc,char **argv)
 {
-    snprintf(s_url,s_url_len,"http://%s:%s/upload",GADGETOSD_SERVER,GADGETOSD_PORT);
+    snprintf(s_url,s_url_len,"http://%s:%s/docker/import",GADGETOSD_SERVER,GADGETOSD_PORT);
     struct mg_mgr mgr;
     struct mg_connection *nc;
     char *filename=argv[1];
