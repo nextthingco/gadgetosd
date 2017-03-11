@@ -1,74 +1,117 @@
-/*
- * Copyright (c) 2017 Next Thing Co
- * All rights reserved
- */
+// Copyright (c) 2017 Next Thing Co
+// All rights reserved
 
-
-#include "version.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "mongoose.h"
+
+#ifndef MG_ENABLE_HTTP_STREAMING_MULTIPART
+#error MG_ENABLE_HTTP_STREAMING_MULTIPART not defined
+#endif
 
 extern char *GADGETOSD_PORT;
 
-static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
-  struct http_message *hm = (struct http_message *) ev_data;
+
+struct file_writer_data {
+  FILE *fp;
+  size_t bytes_written;
+};
+
+
+static void handle_request(struct mg_connection *nc) {
+  mg_printf(nc, "%s",
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+            "<html><body>Hello!</body></html>" );
+  nc->flags |= MG_F_SEND_AND_CLOSE;
+}
+
+
+static void handle_upload(struct mg_connection *nc, int ev, void *p) {
+  struct file_writer_data *data = (struct file_writer_data *) nc->user_data;
+  struct mg_http_multipart_part *mp = (struct mg_http_multipart_part *) p;
 
   switch (ev) {
-    case MG_EV_HTTP_REQUEST:
-      if (mg_vcmp(&hm->uri, "/api/v1/version") == 0) {
-        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
-        mg_printf_http_chunk(nc, "VERSION: %d.%d.%d\r\n\r\n", GADGETOSD_MAJOR, GADGETOSD_MINOR, GADGETOSD_BUGFIX);
-        mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
-      } else if (mg_vcmp(&hm->uri, "/api/v1/docker/import") == 0) {
-        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
-        mg_printf_http_chunk(nc, "SHUTDOWN!\r\n\r\n");
-        mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
-      } else { 
-        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
-        mg_printf_http_chunk(nc, "HELLO\r\n\r\n");
-        mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+    case MG_EV_HTTP_PART_BEGIN: {
+      if (data == NULL) {
+        data = calloc(1, sizeof(struct file_writer_data));
+        //data->fp = tmpfile();
+        data->fp = fopen("tmpfile","wb");
+        data->bytes_written = 0;
+
+        if (data->fp == NULL) {
+          mg_printf(nc, "%s",
+                    "HTTP/1.1 500 Failed to open a file\r\n"
+                    "Content-Length: 0\r\n\r\n");
+          nc->flags |= MG_F_SEND_AND_CLOSE;
+          return;
+        }
+        nc->user_data = (void *) data;
       }
       break;
+    }
+    case MG_EV_HTTP_PART_DATA: {
+        fprintf(stderr,"MG_EV_HTTP_PART_DATA: len=%d\n",mp->data.len);
+        fwrite(mp->data.p,1, mp->data.len, stderr);
+        fprintf(stderr,"\n\n");
+      if (fwrite(mp->data.p, 1, mp->data.len, data->fp) != mp->data.len) {
+        mg_printf(nc, "%s",
+                  "HTTP/1.1 500 Failed to write to a file\r\n"
+                  "Content-Length: 0\r\n\r\n");
+        nc->flags |= MG_F_SEND_AND_CLOSE;
+        return;
+      }
+      data->bytes_written += mp->data.len;
+      break;
+    }
+    case MG_EV_HTTP_PART_END: {
+      mg_printf(nc,
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/plain\r\n"
+                "Connection: close\r\n\r\n"
+                "Written %ld of POST data to a temp file\n\n",
+                (long) ftell(data->fp));
+      nc->flags |= MG_F_SEND_AND_CLOSE;
+      fclose(data->fp);
+      free(data);
+      nc->user_data = NULL;
+      break;
+    }
     default:
+        fprintf(stderr,"unknown: %d\n",ev);
+  }
+}
+
+
+static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
+  (void) ev_data;
+  switch (ev) {
+    case MG_EV_HTTP_REQUEST:
+      // Invoked when the full HTTP request is in the buffer (including body).
+      handle_request(nc);
       break;
   }
 }
 
-int gadgetosd(int argc, char *argv[]) {
+
+int gadgetosd(int argc, char **argv) {
   struct mg_mgr mgr;
   struct mg_connection *nc;
-  struct mg_bind_opts bind_opts;
-
-  int i;
-  char *cp;
-  const char *err_str;
-#if MG_ENABLE_SSL
-  const char *ssl_cert = NULL;
-#endif
 
   mg_mgr_init(&mgr, NULL);
+  nc = mg_bind(&mgr, GADGETOSD_PORT, ev_handler);
 
-  /* Set HTTP server options */
-  memset(&bind_opts, 0, sizeof(bind_opts));
-  bind_opts.error_string = &err_str;
-#if MG_ENABLE_SSL
-  if (ssl_cert != NULL) {
-    bind_opts.ssl_cert = ssl_cert;
-  }
-#endif
-
-  nc = mg_bind_opt(&mgr, GADGETOSD_PORT, ev_handler, bind_opts);
-  if (nc == NULL) {
-    fprintf(stderr, "Error starting server on port %s: %s\n", GADGETOSD_PORT,
-            *bind_opts.error_string);
-    exit(1);
-  }
-
+  mg_register_http_endpoint(nc, "/upload", handle_upload);
+  // Set up HTTP server parameters
   mg_set_protocol_http_websocket(nc);
 
-  fprintf(stderr,"GadgetOSD %d.%d.%d on port %s\n\n", GADGETOSD_MAJOR, GADGETOSD_MINOR, GADGETOSD_BUGFIX, GADGETOSD_PORT);
+  printf("gadgetosd running on port %s\n", GADGETOSD_PORT);
 
-  while (1) {
-    mg_mgr_poll(&mgr, 1000);
+  while(1) {
+      mg_mgr_poll(&mgr, 1000);
   }
   mg_mgr_free(&mgr);
 

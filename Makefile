@@ -11,7 +11,7 @@ MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 all: gadgetosd gadget
 
 gadgetosd: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	gcc -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS)
 
 gadget: gadgetosd
 	ln -s gadgetosd gadget
