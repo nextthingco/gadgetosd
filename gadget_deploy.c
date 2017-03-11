@@ -77,8 +77,8 @@ int encode_chunk(char *boundary, char *name, const char *filename, FILE* fp, int
     
     read=fread((*buf)+pos,sizeof(char),chunksize,fp);
     //fprintf(stderr,"read %lu bytes from %s\n",read,filename);
-    snprintf((*buf)+pos+read,5,"\r\n\r\n");
-    *buf_len = pos+read+4;
+    snprintf((*buf)+pos+read,3,"\r\n");
+    *buf_len = pos+read+2;
 
     return 0;
 }
@@ -137,7 +137,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
   mg_printf(nc,debug);
 
   while(! feof(fp) ) {
-      encode_chunk(boundary,"FILE1",filename,fp,2048,&buf,&buf_len);
+      encode_chunk(boundary,"FILE1",filename,fp,1024,&buf,&buf_len);
       //fprintf(stderr,"[[[strlen(buf)=%lu]]]\n",strlen(buf));
       fputs(buf,stderr);
       fprintf(stderr,"[[[sending %d bytes]]]\n",buf_len);

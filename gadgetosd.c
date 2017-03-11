@@ -54,16 +54,18 @@ static void handle_upload(struct mg_connection *nc, int ev, void *p) {
       break;
     }
     case MG_EV_HTTP_PART_DATA: {
-        fprintf(stderr,"MG_EV_HTTP_PART_DATA: len=%d\n",mp->data.len);
-        fwrite(mp->data.p,1, mp->data.len, stderr);
-        fprintf(stderr,"\n\n");
+      fprintf(stderr,"MG_EV_HTTP_PART_DATA: len=%d\n",mp->data.len);
+      fwrite(mp->data.p,1, mp->data.len, stderr);
+      fprintf(stderr,"\n\n");
       if (fwrite(mp->data.p, 1, mp->data.len, data->fp) != mp->data.len) {
+        fprintf(stderr,"FAIL\n\n");
         mg_printf(nc, "%s",
                   "HTTP/1.1 500 Failed to write to a file\r\n"
                   "Content-Length: 0\r\n\r\n");
         nc->flags |= MG_F_SEND_AND_CLOSE;
         return;
       }
+      fflush(data->fp);
       data->bytes_written += mp->data.len;
       break;
     }
