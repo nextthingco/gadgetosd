@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
+#include <sys/stat.h>
+#include "utils.h"
 
 static int verbose=0;
 static char* type="docker";
@@ -25,6 +27,7 @@ void help()
 int gadget_new(int argc, char **argv)
 {
     int c;
+    char *target_dir=0,*target_file=0;
 
     while (1)
     {
@@ -81,8 +84,9 @@ int gadget_new(int argc, char **argv)
         printf("gadget new: ERROR: no project name given\n");
         return 1;
     }
+    target_dir=argv[optind++];
 
-    if(optind < argc-1) {
+    if(optind < argc) {
         optind++;
         printf("gadget new: ERROR, unknown extra arguments: ");
         while (optind < argc)
@@ -95,6 +99,15 @@ int gadget_new(int argc, char **argv)
         printf("gadget new: ERROR, unknown project types: '%s'\n",type);
         return 1;
     }
+
+    if(mkdir(target_dir,0775)) {
+        printf("gadget new: ERROR: cannot create target directory '%s'\n",target_dir);
+        return 1;
+    }
+
+    cp("/usr/share/gadget/templates/alpine/Dockerfile",target_dir);
+    cp("/usr/share/gadget/templates/alpine/blink-leds",target_dir);
+    cp("/usr/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
     return 0;
 
