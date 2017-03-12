@@ -8,7 +8,7 @@
 static int verbose=0;
 static char* type="docker";
 
-void help()
+void gadget_new_help()
 {
     printf(
             "Create embedded Linux apps - easy.\n"
@@ -18,6 +18,7 @@ void help()
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
             "  -t TYPE, --type=TYPE  specify project type (default: docker)\n"
+            "  --verbose             be verbose\n"
             "\n"
             "project types:\n"
             "  docker                Docker based project\n"
@@ -61,7 +62,7 @@ int gadget_new(int argc, char **argv)
                 break;
 
             case 'h':
-                help();
+                gadget_new_help();
                 return 0;
 
             case 't':
@@ -81,14 +82,13 @@ int gadget_new(int argc, char **argv)
         puts ("verbose flag is set\n");
 
     if(optind == argc) {
-        printf("gadget new: ERROR: no project name given\n");
+        fprintf(stderr,"gadget new: ERROR: no project name given\n");
         return 1;
     }
     target_dir=argv[optind++];
 
     if(optind < argc) {
-        optind++;
-        printf("gadget new: ERROR, unknown extra arguments: ");
+        fprintf(stderr,"gadget new: ERROR, unknown extra arguments: ");
         while (optind < argc)
             printf ("%s ", argv[optind++]);
         putchar ('\n');
@@ -96,12 +96,12 @@ int gadget_new(int argc, char **argv)
     }
 
     if(strcmp(type,"docker")) {
-        printf("gadget new: ERROR, unknown project types: '%s'\n",type);
+        fprintf(stderr,"gadget new: ERROR, unknown project types: '%s'\n",type);
         return 1;
     }
 
     if(mkdir(target_dir,0775)) {
-        printf("gadget new: ERROR: cannot create target directory '%s'\n",target_dir);
+        fprintf(stderr,"gadget new: ERROR: cannot create target directory '%s'\n",target_dir);
         return 1;
     }
 
