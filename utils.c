@@ -10,6 +10,18 @@
 #include <sys/stat.h>
 #include <uuid/uuid.h>
 
+char* xsstrip(char *s)
+{
+    int i = strlen(s)-1;
+    while( i>=0 && ( s[i]=='\n'
+                  || s[i]=='\r'
+                  || s[i]=='\t'
+                  || s[i]==' ' ) ) {
+        s[i--]=0;
+    }
+    return s;
+}
+
 char *xuuid_generate()
 {
   uuid_t uuid;
@@ -22,7 +34,6 @@ char *xuuid_generate()
 
   return s_uuid;
 }
-
 
 char* xsprintf(const char *format, ...)
 {
@@ -143,6 +154,65 @@ _return:
     return ret;
 }
 
+long xfsize(FILE *fp)
+{
+    long size=0;
+    long pos=ftell(fp);
+
+    fseek(fp, 0, SEEK_END);
+    size=ftell(fp);
+    fseek(fp, pos, SEEK_SET);
+    return(size);
+}
+
+char *xfread(FILE* in)
+{
+    char *buf,*ptr;
+    int read=0;
+    long pos=0;
+    int size=0;
+
+    pos=ftell(in);
+    fseek(in, 0, SEEK_END);
+    size=ftell(in)-pos;
+    fseek(in, pos, SEEK_SET);
+
+    buf = malloc(sizeof(char)*(size+1));
+    if(!buf) {
+        fprintf(stderr,"ERROR: cannot allocate memory\n");
+        return NULL;
+    }
+
+    ptr=buf;
+    while(!feof(in) ) {
+        read=fread(ptr,sizeof(char),4096,in);
+        if(read<0) {
+            fprintf(stderr,"ERROR: while reading\n");
+        }
+        ptr+=read;        
+    }
+    buf[size]=0;
+
+    return buf;
+}
+
+char *xreadfile( const char *path )
+{
+    FILE *in=NULL;
+    char *contents=NULL;
+
+    in=fopen(path,"r");
+    if(!in) {
+        fprintf(stderr,"ERROR: cannot read '%s'\n",path);
+        return NULL;
+    }
+
+    contents = xfread(in);
+    fclose(in);
+
+    return contents;
+}
+
 int xfrun(const char *cmd, FILE *out)
 {
     FILE *in;
@@ -162,28 +232,21 @@ _return:
     return ret;
 }
 
-long xfsize(FILE *fp)
+int xrun(const char *cmd, char **output_buf)
 {
-    long size=0;
-    long pos=ftell(fp);
-    fseek(fp, 0, SEEK_END);
-    size=ftell(fp);
-    fseek(fp, pos, SEEK_SET);
-    return(size);
-}
+    FILE *fp=NULL;
+    int ret;
+    char *ptr=NULL;
 
-char *xfread(FILE* in)
-{
-    char *buf;
-    int size=xfsize(in);
-
-    buf = malloc(sizeof(char)*(size+1));
-    if(!buf) return NULL;
-
-    if(fread(buf,sizeof(char),size,in) < size) {
-        free(buf);
-        buf=0;
+    if(!(fp=tmpfile())) {
+        fprintf(stderr,"ERROR: cannot create temp file.");
+        return -1; 
     }
 
-    return buf;
+    ret=xfrun(cmd,fp);
+    fseek(fp,0,SEEK_SET);
+    ptr=xfread(fp);
+    *output_buf=ptr;
+
+    return ret;
 }
