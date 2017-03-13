@@ -1,6 +1,9 @@
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <errno.h>
+#include <limits.h>
 #include "utils.h"
 
 static int verbose;
@@ -22,8 +25,9 @@ void gadget_build_help()
 
 int gadget_build(int argc, char **argv)
 {
-    int c;
-    char *project_path=0;
+    int c,ret=0;
+    char *project_path;
+    char pwd[PATH_MAX]; //previous working dir
     
     while (1)
     {
@@ -57,7 +61,8 @@ int gadget_build(int argc, char **argv)
 
             case 'h':
                 gadget_build_help();
-                return 0;
+                ret=0;
+                goto _return;
 
             case '?':
                 /* getopt_long already printed an error message. */
@@ -82,9 +87,66 @@ int gadget_build(int argc, char **argv)
         while (optind < argc)
             fprintf (stderr,"%s ", argv[optind++]);
         putchar ('\n');
-        return 1;
+        ret = -1;
+        goto _return;
     }
 
-    fprintf(stderr,"project_path=%s\n",project_path);
+    if(!getcwd(pwd,PATH_MAX)) {
+        fprintf(stderr,"gadget build: ERROR: cannot find out current directory");
+        ret=errno;
+    }
+
+    if(chdir(project_path)) {
+        fprintf(stderr,"gadget build: ERROR: cannot access project path '%s'\n",project_path);
+        ret=errno;
+        goto _return;
+    }
+
+    if(!xis_dir(".gadget")) {
+        fprintf(stderr,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
+        ret=1;
+        goto _return;
+    }
+
+
+
+
+    if(system("docker build -t gadget_build_123 .")) {
+
+        fprintf(stderr,"gadget build: ERROR: calling 'docker build' failed\n");
+        ret=errno;
+        goto _return;
+    }
+
+    if(system("docker create --name gadget_build_123_c gadget_build_123 /bin/sh")) {
+
+        fprintf(stderr,"gadget build: ERROR: calling 'docker create' failed\n");
+        ret=errno;
+        goto _return;
+    }
+
+    if(system("docker export gadget_build_123_c --output=gadget_build_123.tar")) {
+
+        fprintf(stderr,"gadget build: ERROR: calling 'docker export' failed\n");
+        ret=errno;
+        goto _return;
+    }
+
+    if(system("docker rm gadget_build_123_c")) {
+
+        fprintf(stderr,"gadget build: ERROR: calling 'docker rm' failed\n");
+        ret=errno;
+        goto _return;
+    }
+
+
+
+_return:
+    if(chdir(pwd)) {
+        fprintf(stderr,"gadget build: ERROR: cannot return to previous directory '%s'\n",pwd);
+        ret=errno;
+    }
+
+    return ret;
 }
 

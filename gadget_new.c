@@ -28,7 +28,7 @@ void gadget_new_help()
 int gadget_new(int argc, char **argv)
 {
     int c;
-    char *target_dir=0,*target_file=0;
+    char *target_dir=0,*tmpstr=0;
 
     while (1)
     {
@@ -105,11 +105,16 @@ int gadget_new(int argc, char **argv)
         return 1;
     }
 
-    cp("/usr/share/gadget/templates/alpine/Dockerfile",target_dir);
-    cp("/usr/share/gadget/templates/alpine/blink-leds",target_dir);
-    cp("/usr/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
+    if( xmkdir(0775,"%s/%s",target_dir,".gadget") ) {
+        fprintf(stderr,"gadget new: ERROR: cannot create directory '%s/%s'\n",target_dir,".gadget");
+        return 0;
+    }
 
+    xcp("/usr/share/gadget/templates/alpine/Dockerfile",target_dir);
+    xcp("/usr/share/gadget/templates/alpine/blink-leds",target_dir);
+    xcp("/usr/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
+
+_return:
     return 0;
-
 }
 

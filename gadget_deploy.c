@@ -1,11 +1,11 @@
 /*
- *  * Copyright (c) 2017 Cesanta Software Limited
- *   * All rights reserved
- *    */
+ *  Copyright (c) 2017 Next Thing Co
+ *  All rights reserved
+ */
 
-#include "mongoose.h"
 #include <stdio.h>
-#include <uuid/uuid.h>
+#include "mongoose.h"
+#include "utils.h"
 
 extern char* GADGETOSD_SERVER;
 extern char* GADGETOSD_PORT;
@@ -55,76 +55,70 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
                                       mg_event_handler_t ev_handler,
                                       const char *url,
                                       const char *filename) {
-  char *user = NULL, *pass = NULL, *addr = NULL;
-  const char *path = NULL;
-  struct mbuf auth;
-  struct mg_connection *nc;  FILE* fp;
-  size_t filesize;
-  struct mg_connect_opts opts;
-  uuid_t uuid;
-  char boundary[33];
-  char debug[1024*1024];
-  const int buf_len=2048;
-  char buf[buf_len];
-  int read=0;
+    char *user = NULL, *pass = NULL, *addr = NULL;
+    const char *path = NULL;
+    struct mbuf auth;
+    struct mg_connection *nc;  FILE* fp;
+    size_t filesize;
+    struct mg_connect_opts opts;
+    char debug[1024*1024];
+    const int buf_len=2048;
+    char buf[buf_len];
+    int read=0;
+    struct mg_connection *ret=NULL;
+    char *boundary=0;
 
-  memset(&opts, 0, sizeof(opts));
+    memset(&opts, 0, sizeof(opts));
+    mbuf_init(&auth, 0);
 
-  uuid_generate(uuid);
-  for(int i=0;i<16;i++) { snprintf(boundary+(i*2),3,"%02x",uuid[i]); }
+    boundary=xuuid_generate();
+    if(!boundary) { ret=NULL; goto _return; }
 
-  fp = fopen(filename,"rb");
-  if(!fp) return NULL;
-  fseek(fp, 0, SEEK_END);
-  filesize = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
+    fp = fopen(filename,"rb");
+    if(!fp) { ret=NULL; goto _return; }
+    filesize = xfsize(fp);
 
-  nc = mg_connect_http_base(mgr, ev_handler, opts, "http://", "https://", url,
-                           &path, &user, &pass, &addr);
+    nc = mg_connect_http_base(mgr, ev_handler, opts, "http://", "https://", url,
+            &path, &user, &pass, &addr);
+    if (nc == NULL) { ret=NULL; goto _return; }
 
-  if (nc == NULL) {
-    fclose(fp);
-    return NULL;
-  }
+    if (user != NULL) { mg_basic_auth_header(user, pass, &auth); }
 
-  mbuf_init(&auth, 0);
-  if (user != NULL) {
-    mg_basic_auth_header(user, pass, &auth);
-  }
- 
-  snprintf(debug,1024*1024,
-           "POST %s HTTP/1.1\r\n"
-           "Host: %s\r\n"
-           "Content-Length: %" SIZE_T_FMT "\r\n"
-           "Content-Type: multipart/form-data; boundary=%s\r\n"
-           "%.*s\r\n"
-           "\r\n"
-           "--%s\r\n"
-           "Content-Disposition: form-data; name=\"FILE1\"; filename=\"%s\"\r\n"
-           "Content-Type: application/octet-stream\r\n"
-           "Content-Transfer-Encoding: binary\r\n"
-           "\r\n",
+    snprintf(debug,1024*1024,
+            "POST %s HTTP/1.1\r\n"
+            "Host: %s\r\n"
+            "Content-Length: %" SIZE_T_FMT "\r\n"
+            "Content-Type: multipart/form-data; boundary=%s\r\n"
+            "%.*s\r\n"
+            "\r\n"
+            "--%s\r\n"
+            "Content-Disposition: form-data; name=\"FILE1\"; filename=\"%s\"\r\n"
+            "Content-Type: application/octet-stream\r\n"
+            "Content-Transfer-Encoding: binary\r\n"
+            "\r\n",
             path, addr, 2*filesize, boundary,
             (int) auth.len, (auth.buf == NULL ? "" : auth.buf),
             boundary, filename);
-  fputs(debug,stderr);
+    fputs(debug,stderr);
+    mg_printf(nc,debug);
 
-  mg_printf(nc,debug);
+    while(! feof(fp) ) {
+        read=fread(buf,sizeof(char),buf_len,fp);
+        //fwrite(buf,sizeof(char),read,stderr);
+        mg_send(nc,buf,read);
+    }
+    mg_printf(nc,"\r\n--%s--\r\n",boundary);
+    fprintf(stderr,"\r\n--%s--\r\n",boundary);
+    ret=nc;
 
-  while(! feof(fp) ) {
-      read=fread(buf,sizeof(char),buf_len,fp);
-      //fwrite(buf,sizeof(char),read,stderr);
-      mg_send(nc,buf,read);
-  }
-  mg_printf(nc,"\r\n--%s--\r\n",boundary);
-  fprintf(stderr,"\r\n--%s--\r\n",boundary);
-
-  fclose(fp);
-  mbuf_free(&auth);
-  free(user);
-  free(pass);
-  free(addr);
-  return nc;
+_return:
+    mbuf_free(&auth);
+    if(boundary) free(boundary);
+    if(fp) fclose(fp);
+    if(user) free(user);
+    if(pass) free(pass);
+    if(addr) free(addr);
+    return nc;
 }
 
 

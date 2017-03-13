@@ -105,16 +105,20 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
 int gadgetosd(int argc, char **argv) {
   struct mg_mgr mgr;
   struct mg_connection *nc;
-
+  
   mg_mgr_init(&mgr, NULL);
   nc = mg_bind(&mgr, GADGETOSD_PORT, ev_handler);
+  if(!nc) { 
+    fprintf(stderr,"gadgetosd: ERROR: cannot create network connection\n");
+    return 1;
+  }
 
   mg_register_http_endpoint(nc, "/upload", handle_upload);
   mg_register_http_endpoint(nc, "/docker/import", handle_docker_import);
   // Set up HTTP server parameters
   mg_set_protocol_http_websocket(nc);
 
-  printf("gadgetosd running on port %s\n", GADGETOSD_PORT);
+  fprintf(stderr,"gadgetosd running on port %s\n", GADGETOSD_PORT);
 
   while(1) {
       mg_mgr_poll(&mgr, 1000);
