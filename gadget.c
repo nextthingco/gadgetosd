@@ -47,6 +47,7 @@ int gadget(int argc, char **argv)
     }
 
     printf("gadget: '%s' is not a gadget command. Try %s --help.\n",argv[1],argv[0]);
+    return 1;
 }
 
 int gadget_help(int argc, char **argv)

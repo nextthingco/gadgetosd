@@ -63,15 +63,16 @@ int xis_dir(const char *path) {
 
 int xmkpath(char *dir, mode_t mode)
 {
-    if(!dir) {
-        errno = EINVAL;
-        return 1;
-    }
+    int ret=0;
+    char *cpy=0;
 
-    if(xis_dir(dir)) return 0;
+    if(!dir) { errno = EINVAL; ret=1; goto _return; }
+    if(xis_dir(dir)) { ret=0; goto _return; }
 
-    xmkpath(dirname(strdupa(dir)), mode);
+    xmkpath(dirname((cpy=strdup(dir))), mode);
 
+_return:
+    if(cpy) free(cpy);
     return mkdir(dir, mode);
 }
 
