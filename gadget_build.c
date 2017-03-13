@@ -28,7 +28,10 @@ int gadget_build(int argc, char **argv)
     int c,ret=0;
     char *project_path;
     char pwd[PATH_MAX]; //previous working dir
-    
+    char *container_hash=NULL;
+    char *export_cmd=NULL;
+    char *rm_cmd=NULL;
+
     while (1)
     {
         static struct option long_options[] =
@@ -91,6 +94,7 @@ int gadget_build(int argc, char **argv)
         goto _return;
     }
 
+
     if(!getcwd(pwd,PATH_MAX)) {
         fprintf(stderr,"gadget build: ERROR: cannot find out current directory");
         ret=errno;
@@ -108,9 +112,7 @@ int gadget_build(int argc, char **argv)
         goto _return;
     }
 
-
-
-
+    //TODO: get rid of 'gadet_guild_123'
     if(system("docker build -t gadget_build_123 .")) {
 
         fprintf(stderr,"gadget build: ERROR: calling 'docker build' failed\n");
@@ -118,30 +120,38 @@ int gadget_build(int argc, char **argv)
         goto _return;
     }
 
-    if(system("docker create --name gadget_build_123_c gadget_build_123 /bin/sh")) {
+    //TODO: get rid of 'gadet_guild_123'
+    if(xrun("docker create gadget_build_123 /bin/sh",&container_hash)) {
 
         fprintf(stderr,"gadget build: ERROR: calling 'docker create' failed\n");
         ret=errno;
         goto _return;
     }
+    xsstrip(container_hash);
+    //fprintf(stderr,"created container [%s]\n",container_hash);
 
-    if(system("docker export gadget_build_123_c --output=gadget_build_123.tar")) {
-
-        fprintf(stderr,"gadget build: ERROR: calling 'docker export' failed\n");
+    //TODO: get rid of 'gadet_guild_123'
+    export_cmd=xsprintf("docker export %s -o gadget_build_123.tar", container_hash);
+    fprintf(stderr,"running '%s'\n",export_cmd);
+    if(system(export_cmd)) {
+        fprintf(stderr,"gadget build: ERROR: calling '%s' failed\n",export_cmd);
         ret=errno;
         goto _return;
     }
 
-    if(system("docker rm gadget_build_123_c")) {
+    rm_cmd=xsprintf("docker rm %s", container_hash);
+    fprintf(stderr,"running '%s'\n",rm_cmd);
+    if(system(rm_cmd)) {
 
         fprintf(stderr,"gadget build: ERROR: calling 'docker rm' failed\n");
         ret=errno;
         goto _return;
     }
 
-
-
 _return:
+    if(container_hash) free(container_hash);
+    if(export_cmd) free(export_cmd);
+    if(rm_cmd) free(rm_cmd);
     if(chdir(pwd)) {
         fprintf(stderr,"gadget build: ERROR: cannot return to previous directory '%s'\n",pwd);
         ret=errno;
