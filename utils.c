@@ -38,7 +38,7 @@ char *xuuid_generate()
 char* xsprintf(const char *format, ...)
 {
     char *buf=0;
-    int ret;
+    int ret=0;
 
     va_list args;
     va_start(args, format);
@@ -119,7 +119,7 @@ int xfcp(FILE *src, FILE *dst)
 }
 
 int xcp(char *source,char *destination) {
-    FILE *src,*dst;
+    FILE *src=0,*dst=0;
     int ret=0;
     char path_sep='/';
     char *p=0,*q=0;
@@ -168,7 +168,7 @@ long xfsize(FILE *fp)
 
 char *xfread(FILE* in)
 {
-    char *buf,*ptr;
+    char *buf=0,*ptr=0;
     int read=0;
     long pos=0;
     int size=0;
@@ -216,7 +216,7 @@ char *xreadfile( const char *path )
 
 int xfrun(const char *cmd, FILE *out)
 {
-    FILE *in;
+    FILE *in=NULL;
     int ret=0;
 
     if(!out) return 1;
@@ -236,7 +236,7 @@ _return:
 int xrun(const char *cmd, char **output_buf)
 {
     FILE *fp=NULL;
-    int ret;
+    int ret=0;
     char *ptr=NULL;
 
     if(!(fp=tmpfile())) {
