@@ -53,11 +53,50 @@ char* xsprintf(const char *format, ...)
     return buf;
 }
 
-int xis_dir(const char *path) {
-   struct stat statbuf;
-   if (stat(path, &statbuf) != 0)
-       return 0;
-   return S_ISDIR(statbuf.st_mode);
+int xis_file(const char *format, ...) {
+    struct stat statbuf;
+    char *tmpstr=0;
+    int ret=0;
+
+    va_list args;
+    va_start(args, format);
+    ret=vasprintf(&tmpstr, format, args);
+    va_end(args);
+    if(ret<0) {
+        fputs("xis_dir(): ERROR: vasprintf() returned negative value",stderr);
+        ret=0;
+        goto _return;
+    }
+
+    if (stat(tmpstr, &statbuf) != 0) { ret=0; goto _return; }
+    ret=S_ISREG(statbuf.st_mode);
+
+_return:
+    if(tmpstr) free(tmpstr);
+    return ret;
+}
+
+int xis_dir(const char *format, ...) {
+    struct stat statbuf;
+    char *tmpstr=0;
+    int ret=0;
+
+    va_list args;
+    va_start(args, format);
+    ret=vasprintf(&tmpstr, format, args);
+    va_end(args);
+    if(ret<0) {
+        fputs("xis_dir(): ERROR: vasprintf() returned negative value",stderr);
+        ret=0;
+        goto _return;
+    }
+
+    if (stat(tmpstr, &statbuf) != 0) { ret=0; goto _return; }
+    ret=S_ISDIR(statbuf.st_mode);
+
+_return:
+    if(tmpstr) free(tmpstr);
+    return ret;
 }
 
 

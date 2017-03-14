@@ -5,8 +5,11 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 #include "mongoose.h"
 #include "utils.h"
+
+static int verbose;
 
 extern char* GADGETOSD_SERVER;
 extern char* GADGETOSD_PORT;
@@ -127,16 +130,112 @@ _return:
     return nc;
 }
 
-
-int gadget_deploy(int arvc,char **argv)
+void gadget_deploy_help()
 {
+    printf(
+            "Create embedded Linux apps - easy.\n"
+            "\n"
+            "usage: gadget deploy [<project_path>]\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help            show this help message and exit\n"
+            "  --verbose             be verbose\n"
+            "  <project_path>        build project in path (default: .)\n"
+          );
+}
+
+int gadget_deploy(int argc,char **argv)
+{
+    int c, ret=0;
     struct mg_mgr mgr;
-    struct mg_connection *nc;
-    char *filename=argv[1];
+    struct mg_connection *nc=NULL;
+    char   *project_path=NULL;
+    char   *payload_path=NULL;
 
     asprintf(&s_docker_import_url,"http://%s:%s/docker/import",GADGETOSD_SERVER,GADGETOSD_PORT);
     asprintf(&s_docker_run_url,"http://%s:%s/docker/run",GADGETOSD_SERVER,GADGETOSD_PORT);
     asprintf(&s_gadgetosd_ver_url,"http://%s:%s/version",GADGETOSD_SERVER,GADGETOSD_PORT);
+
+    while (1)
+    {
+        static struct option long_options[] =
+        {
+            {"verbose", no_argument,       &verbose, 1},
+            {"help",    no_argument,       0, 'h'},
+            {0, 0, 0, 0}
+        };
+
+        int option_index = 0;
+
+        c = getopt_long (argc, argv, "h",
+                long_options, &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        switch (c)
+        {
+            case 0:
+                /* If this option set a flag, do nothing else now. */
+                if (long_options[option_index].flag != 0)
+                    break;
+                printf("option %s", long_options[option_index].name);
+                if (optarg)
+                    printf (" with arg %s", optarg);
+                printf ("\n");
+                break;
+
+            case 'h':
+                gadget_deploy_help();
+                ret=0;
+                goto _return;
+
+            case '?':
+                /* getopt_long already printed an error message. */
+                break;
+
+            default:
+                abort ();
+        }
+    }
+
+    if (verbose)
+        puts ("verbose flag is set\n");
+
+    if(optind == argc) {
+        project_path=".";
+    } else {
+        project_path=argv[optind++];
+    }
+
+    if(optind < argc) {
+        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        while (optind < argc)
+            fprintf (stderr,"%s ", argv[optind++]);
+        putchar ('\n');
+        ret = -1;
+        goto _return;
+    }
+
+
+    if(!xis_dir("%s/.gadget",project_path)) {
+        fprintf(stderr,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
+        ret=1;
+        goto _return;
+    }
+
+    if(asprintf(&payload_path,"%s/gadget_build_123.tar",project_path)<0)
+    {
+        fprintf(stderr,"gadget build: ERROR: asprintf returned negative value\n");
+        goto _return;
+    }
+
+    if(!xis_file(payload_path)) {
+        fprintf(stderr,"gadget build: ERROR: cannot read: '%s'\n",payload_path);
+        ret=1;
+        goto _return;
+    }
 
     mg_mgr_init(&mgr, NULL);
 
@@ -145,8 +244,9 @@ int gadget_deploy(int arvc,char **argv)
     fprintf(stderr,"requesting %s\n", s_gadgetosd_ver_url);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
 
-    fprintf(stderr,"sending %s...\n",filename);
-    nc = mg_postfile_http(&mgr, ev_handler, s_docker_import_url, filename);
+
+    fprintf(stderr,"sending %s...\n",payload_path);
+    nc = mg_postfile_http(&mgr, ev_handler, s_docker_import_url, payload_path);
     mg_set_protocol_http_websocket(nc);
     fprintf(stderr,"requesting %s\n", s_docker_import_url);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
@@ -157,7 +257,7 @@ _return:
     if(s_docker_import_url) free(s_docker_import_url);
     if(s_docker_run_url) free(s_docker_run_url);
     if(s_gadgetosd_ver_url) free(s_gadgetosd_ver_url);
-
+    if(payload_path) free(payload_path);
 
     return 0;
 }
