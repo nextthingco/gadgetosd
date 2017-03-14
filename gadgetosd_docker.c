@@ -12,10 +12,11 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
   switch (ev) {
     case MG_EV_HTTP_PART_BEGIN: {
       //fprintf(stderr,"MG_EV_HTTP_PART_BEGIN\n");
-      if (data == NULL) {
+      if( data == NULL ) {
         data = calloc(1, sizeof(struct file_writer_data));
         //data->fp = tmpfile();
-        data->fp = popen("/usr/bin/docker import - testme","w");
+        system("docker rmi testme");
+        data->fp = popen("docker import - testme","w");
         data->bytes_written = 0;
 
         if (data->fp == NULL) {
@@ -29,10 +30,10 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
       }
       break;
     }
+
     case MG_EV_HTTP_PART_DATA: {
-      //fprintf(stderr,"MG_EV_HTTP_PART_DATA: len=%d\n",mp->data.len);
       //fwrite(mp->data.p,1, mp->data.len, stderr);
-      if (fwrite(mp->data.p, 1, mp->data.len, data->fp) != mp->data.len) {
+      if( fwrite(mp->data.p, 1, mp->data.len, data->fp) != mp->data.len ) {
         fprintf(stderr,"FAIL\n\n");
         mg_printf(nc, "%s",
                   "HTTP/1.1 500 Failed to write to a file\r\n"
@@ -42,8 +43,10 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
       }
       fflush(data->fp);
       data->bytes_written += mp->data.len;
+      //fprintf(stderr,"MG_EV_HTTP_PART_DATA: len=%lu total=%lu\n",mp->data.len,data->bytes_written);
       break;
     }
+
     case MG_EV_HTTP_PART_END: {
       //fprintf(stderr,"MG_EV_HTTP_PART_END\n");
       int ret=WEXITSTATUS(pclose(data->fp));

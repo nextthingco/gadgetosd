@@ -110,9 +110,9 @@ int gadget_new(int argc, char **argv)
         return 0;
     }
 
-    xcp("/usr/share/gadget/templates/alpine/Dockerfile",target_dir);
-    xcp("/usr/share/gadget/templates/alpine/blink-leds",target_dir);
-    xcp("/usr/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
+    xcp("/usr/local/share/gadget/templates/alpine/Dockerfile",target_dir);
+    xcp("/usr/local/share/gadget/templates/alpine/blink-leds",target_dir);
+    xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
 _return:
     return 0;

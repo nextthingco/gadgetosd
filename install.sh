@@ -3,18 +3,41 @@
 OS=UNKNOWN
 SUDO=""
 
-INSTALL_DIR=/usr/share/gadget/templates/alpine
+INSTALL_DIR=/usr/local/share/gadget/templates/alpine
 
 ALPINE_ROOTFS_URL=${ALPINE_ROOTFS_URL:-https://chiptainer_alpine.surge.sh/alpine_armhf_rootfs.tar.gz}
 
 if [[ $EUID -ne 0 ]]; then
-   export SUDO=sudo -i
+   echo "This script needs super user right. Try: sudo $0"
+   exit 1
 fi
+
+function has()
+{
+    [[ x"$(which $1)" == x ]] && return 1;
+    return 0;
+}
+
+function download()
+{
+    echo "Downloading $1"
+    SRC=$1
+    DST=${2:-${1##*/}}
+
+    if has curl; then
+        curl -o $DST $SRC
+    elif has wget; then
+        wget -c $SRC -O $DST 
+    fi
+}
 
 function get_os_type()
 {
     case "$OSTYPE" in
-        darwin*)  echo "Sorry OSX is not supportd yet."; exit 1 ;; 
+        darwin*)
+            export OS=Mac
+            INSTALL=brew
+            ;;
         linux*)
             export OS=Linux
             export RELEASE_ID=$(awk -F= '/^ID=/ {print $2;}' /etc/os-release)
@@ -22,7 +45,9 @@ function get_os_type()
 
             if [[ RELEASE_ID == "ubuntu" ]]; then
                 INSTALL=apt-get install
-                DOWNLOAD=wget -c
+            else
+                echo "Sorry, $RELEASE_ID Linux is not supported yey."
+                exit 1
             fi
             ;;
         solaris*) echo "Sorry, Solaris is not supported yet."; exit 1 ;;
@@ -34,12 +59,19 @@ function get_os_type()
 
 function check_install()
 {
-    exe=$(whereis -b $1 |awk '{print $2}')
-    if [[ -z "$exe" ]]; then
+    if ! has "$1"; then
         echo "$1 is not found. Please install: $SUDO $INSTALL $1"
     else
-        echo "found $exe"
+        echo "found $1"
     fi
+}
+
+DECL="$(declare -f download)"
+DECL="$DECL; $(declare -f has)"
+
+function run_sudo()
+{
+    sudo -i bash -c "$DECL; $@"
 }
 
 echo -e "Installing Gadget\n"
@@ -51,8 +83,7 @@ echo -e "You are running $OS, $RELEASE_ID $RELEASE_VERSION\n"
 check_install git
 check_install docker
 
-$SUDO mkdir -p "${INSTALL_DIR}"
-$SUDO wget -c $ALPINE_ROOTFS_URL -O "${INSTALL_DIR}"/rootfs.tar.gz
-$SUDO cp templates/alpine/blink-leds "${INSTALL_DIR}"/
-$SUDO cp templates/alpine/Dockerfile "${INSTALL_DIR}"/
-
+mkdir -p "${INSTALL_DIR}"
+download $ALPINE_ROOTFS_URL "${INSTALL_DIR}"/rootfs.tar.gz
+cp templates/alpine/blink-leds "${INSTALL_DIR}"/
+cp templates/alpine/Dockerfile "${INSTALL_DIR}"/
