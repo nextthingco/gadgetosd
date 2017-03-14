@@ -121,29 +121,9 @@ int gadget_build(int argc, char **argv)
     }
 
     //TODO: get rid of 'gadet_guild_123'
-    if(xrun("docker create gadget_build_123 /bin/sh",&container_hash)) {
+    if(system("docker save gadget_build_123 -o gadget_build_123.tar")) {
 
         fprintf(stderr,"gadget build: ERROR: calling 'docker create' failed\n");
-        ret=errno;
-        goto _return;
-    }
-    xsstrip(container_hash);
-    //fprintf(stderr,"created container [%s]\n",container_hash);
-
-    //TODO: get rid of 'gadet_guild_123'
-    export_cmd=xsprintf("docker export %s -o gadget_build_123.tar", container_hash);
-    fprintf(stderr,"running '%s'\n",export_cmd);
-    if(system(export_cmd)) {
-        fprintf(stderr,"gadget build: ERROR: calling '%s' failed\n",export_cmd);
-        ret=errno;
-        goto _return;
-    }
-
-    rm_cmd=xsprintf("docker rm %s", container_hash);
-    fprintf(stderr,"running '%s'\n",rm_cmd);
-    if(system(rm_cmd)) {
-
-        fprintf(stderr,"gadget build: ERROR: calling 'docker rm' failed\n");
         ret=errno;
         goto _return;
     }

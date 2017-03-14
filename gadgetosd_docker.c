@@ -15,8 +15,10 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
       if( data == NULL ) {
         data = calloc(1, sizeof(struct file_writer_data));
         //data->fp = tmpfile();
-        system("docker rmi testme");
-        data->fp = popen("docker import - testme","w");
+        system("docker stop gadget_build_123_c");
+        system("docker rm gadget_build_123_c");
+        system("docker rmi gadget_build_123");
+        data->fp = popen("docker load","w");
         data->bytes_written = 0;
 
         if (data->fp == NULL) {
@@ -66,6 +68,7 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
       nc->flags |= MG_F_SEND_AND_CLOSE;
       free(data);
       nc->user_data = NULL;
+      system("docker run --name gadget_build_123_c gadget_build_123");
       break;
     }
     default:
