@@ -3,6 +3,7 @@
  *  All rights reserved
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
