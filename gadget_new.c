@@ -29,6 +29,7 @@ int gadget_new(int argc, char **argv)
 {
     int c;
     char *target_dir=0,*tmpstr=0;
+    char *cmd=0;
 
     while (1)
     {
@@ -110,11 +111,17 @@ int gadget_new(int argc, char **argv)
         return 0;
     }
 
-    xcp("/usr/local/share/gadget/templates/alpine/Dockerfile",target_dir);
-    xcp("/usr/local/share/gadget/templates/alpine/blink-leds",target_dir);
-    xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
+  
+    // doesn't copy executable flags... 
+    //xcp("/usr/local/share/gadget/templates/alpine/dockerfile",target_dir);
+    //xcp("/usr/local/share/gadget/templates/alpine/blink-leds",target_dir);
+    //xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
+    // q'n'd fix:
+    asprintf(&cmd,"cp -va /usr/local/share/gadget/templates/alpine/* %s/",target_dir); if(system(cmd)) goto _return;
+ 
 _return:
+    if(cmd) free(cmd);
     return 0;
 }
 
