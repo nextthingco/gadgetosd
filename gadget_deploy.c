@@ -113,6 +113,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
         if(read<0) {
             fprintf(stderr,"ERROR: while reading file");
         }
+//        fprintf(stderr,".");
         mg_send(nc,buf,read);
         mg_mgr_poll(mgr, 1);
     }
@@ -244,6 +245,7 @@ int gadget_deploy(int argc,char **argv)
     mg_set_protocol_http_websocket(nc);
     fprintf(stderr,"requesting %s\n", s_gadgetosd_ver_url);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
+    s_exit_flag=0; //needs to be reset here, otherwise the following fails!!
 
 
     fprintf(stderr,"sending %s...\n",payload_path);
