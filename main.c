@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char* GADGETOSD_SERVER  = "127.0.0.1";
+char* GADGETOSD_SERVER  = "192.168.81.1";
 char* GADGETOSD_PORT    = "31415";
 
 extern int gadgetosd(int argc, char **argv);
