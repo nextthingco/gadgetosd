@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <getopt.h>
 #include <errno.h>
 #include <limits.h>
@@ -28,7 +29,6 @@ int gadget_build(int argc, char **argv)
     int c,ret=0;
     char *project_path;
     char pwd[PATH_MAX]; //previous working dir
-    char *container_hash=NULL;
     char *export_cmd=NULL;
     char *rm_cmd=NULL;
 
@@ -129,7 +129,6 @@ int gadget_build(int argc, char **argv)
     }
 
 _return:
-    if(container_hash) free(container_hash);
     if(export_cmd) free(export_cmd);
     if(rm_cmd) free(rm_cmd);
     if(chdir(pwd)) {
