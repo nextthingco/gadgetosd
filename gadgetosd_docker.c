@@ -1,5 +1,9 @@
 #include "mongoose.h"
 
+#ifndef MG_ENABLE_HTTP_STREAMING_MULTIPART
+#error MG_ENABLE_HTTP_STREAMING_MULTIPART not defined
+#endif
+
 struct file_writer_data {
   FILE *fp;
   size_t bytes_written;
@@ -11,7 +15,7 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
 
   switch (ev) {
     case MG_EV_HTTP_PART_BEGIN: {
-      //fprintf(stderr,"MG_EV_HTTP_PART_BEGIN\n");
+      fprintf(stderr,"MG_EV_HTTP_PART_BEGIN\n");
       if( data == NULL ) {
         data = calloc(1, sizeof(struct file_writer_data));
         //data->fp = tmpfile();
@@ -50,7 +54,7 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
     }
 
     case MG_EV_HTTP_PART_END: {
-      //fprintf(stderr,"MG_EV_HTTP_PART_END\n");
+      fprintf(stderr,"MG_EV_HTTP_PART_END\n");
       int ret=WEXITSTATUS(pclose(data->fp));
       if(ret) {
           mg_printf(nc,
@@ -68,10 +72,13 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
       nc->flags |= MG_F_SEND_AND_CLOSE;
       free(data);
       nc->user_data = NULL;
-      system("docker run --name gadget_build_123_c gadget_build_123");
+      system("docker run --privileged -v /sys:/sys --name gadget_build_123_c gadget_build_123");
       break;
     }
     default:
-        fprintf(stderr,"unknown: %d\n",ev);
+        fprintf(stderr,
+                "unknown: %d, MG_EV_HTTP_PART_END=%d, MG_EV_HTTP_PART_BEGIN=%d\n",
+                ev, MG_EV_HTTP_PART_END, MG_EV_HTTP_PART_BEGIN
+               );
   }
 }
