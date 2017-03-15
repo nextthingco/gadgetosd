@@ -49,7 +49,7 @@ gadgetosd: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 gadget: gadgetosd
-	ln -s gadgetosd gadget
+	ln -fs gadgetosd gadget
 
 clean:
 	rm *.o gadget gadgetosd
