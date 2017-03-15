@@ -1,6 +1,7 @@
 CC=gcc
 CFLAGS=-I. -O2
-DEPS = mongoose.h
+LIBS=-lmongoose
+#DEPS=mongoose.h
 
 ifeq ($(OS),Windows_NT)
     CFLAGS += -D WIN32
@@ -36,9 +37,9 @@ else
 endif
 
 OBJ = main.o utils.o \
-mongoose.o \
 gadgetosd.o gadgetosd_docker.o \
 gadget.o gadget_new.o gadget_build.o gadget_deploy.o 
+#mongoose.o \
 
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
@@ -48,10 +49,10 @@ MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 all: gadgetosd gadget
 
 gadgetosd: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
+	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 gadget: gadgetosd
 	ln -s gadgetosd gadget
 
 clean:
-	rm *.o
+	rm *.o gadget gadgetosd
