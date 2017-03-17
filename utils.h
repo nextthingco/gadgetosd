@@ -1,7 +1,21 @@
+/*
+ * ex: softtabstop=4 shiftwidth=4 tabstop=4 expandtab
+ *
+ * Copyright (c) 2017 Next Thing Co
+ * All rights reserved
+ */
+
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
 #include <sys/types.h>
+
+#if defined(__linux__)
+    #include <linux/limits.h>
+#elif defined(__APPLE__)
+    #include <limits.h>
+#elif defined(_WIN32)
+#endif
 
 //strips of trailing white space characters
 extern char* xsstrip(char *s);
@@ -25,5 +39,10 @@ extern int xfrun(const char *cmd, FILE *out);
 //runs command and captures output in output_buf
 //NOTE: please free() output_buf yourself!
 extern int xrun(const char *cmd, char **output_buf);
+
+#ifdef PATH_MAX
+//#undef PATH_MAX
+#define PATH_MAX 1024
+//#endif
 
 #endif //_UTILS_H_
