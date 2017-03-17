@@ -72,7 +72,7 @@ void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
       nc->flags |= MG_F_SEND_AND_CLOSE;
       free(data);
       nc->user_data = NULL;
-      system("docker run --privileged -v /sys:/sys --name gadget_build_123_c gadget_build_123");
+      system("docker run --privileged -v /sys:/sys --name gadget_build_123_c gadget_build_123 &");
       break;
     }
     default:
