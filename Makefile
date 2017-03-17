@@ -37,7 +37,7 @@ else
 endif
 
 OBJ = main.o utils.o \
-gadgetosd.o gadgetosd_docker.o \
+gadgetosd.o gadgetosd_docker.o gadgetosd_api_version.o\
 gadget.o gadget_new.o gadget_build.o gadget_deploy.o 
 
 %.o: %.c

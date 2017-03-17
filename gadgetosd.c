@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include "mongoose.h"
 
-#include "gadgetosd_docker.h"
+extern void handle_version(struct mg_connection *nc, int ev, void *p);
+extern void handle_docker_import(struct mg_connection *nc, int ev, void *p);
 
 extern char *GADGETOSD_PORT;
 
@@ -43,6 +44,7 @@ int gadgetosd(int argc, char **argv)
         return 1;
     }
 
+    mg_register_http_endpoint(nc, "/api/version", handle_version);
     mg_register_http_endpoint(nc, "/docker/import", handle_docker_import);
     mg_set_protocol_http_websocket(nc);
 
