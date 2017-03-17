@@ -1,6 +1,8 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include <sys/types.h>
+
 //strips of trailing white space characters
 extern char* xsstrip(char *s);
 
