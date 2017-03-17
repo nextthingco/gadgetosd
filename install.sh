@@ -7,10 +7,13 @@ INSTALL_DIR=/usr/local/share/gadget/templates/alpine
 
 ALPINE_ROOTFS_URL=${ALPINE_ROOTFS_URL:-https://chiptainer_alpine.surge.sh/alpine_armhf_rootfs.tar.gz}
 
-if [[ $EUID -ne 0 ]]; then
-   echo "This script needs super user right. Try: sudo $0"
-   exit 1
-fi
+function check_root()
+{
+ if [[ $EUID -ne 0 ]]; then
+    echo "This script needs super user right. Try: sudo $0"
+    exit 1
+ fi
+}
 
 function has()
 {
@@ -35,10 +38,12 @@ function get_os_type()
 {
     case "$OSTYPE" in
         darwin*)
+            check_root
             export OS=Mac
             INSTALL=brew
             ;;
         linux*)
+            check_root
             export OS=Linux
             export RELEASE_ID=$(awk -F= '/^ID=/ {print $2;}' /etc/os-release)
             export RELEASE_VERSION=$(awk -F= '/^VERSION_ID=/ {print $2;}' /etc/os-release)
@@ -52,7 +57,17 @@ function get_os_type()
             ;;
         solaris*) echo "Sorry, Solaris is not supported yet."; exit 1 ;;
         bsd*)     echo "Sorry, BSD is not supported yet"; exit 1 ;;
-        msys*)    echo "Sorry, WINDOWS is not supported yet"; exit 1 ;;
+        msys*) 
+            export OS=Windows
+            export RELEASE_ID="MSYS"
+            
+            if [[ $(echo $CONTITLE | grep MSYS2) ]]; then
+                RELEASE_VERSION="MSYS2"
+                INSTALL=pacman -S
+            else
+                echo "Sorry, only MSYS2 is supported"; exit 1
+            fi
+            ;;
         *)        echo "Sorry, unknown operating system."; exit 1 ;;
      esac
 }
