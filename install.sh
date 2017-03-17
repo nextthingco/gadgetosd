@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 OS=UNKNOWN
 SUDO=""
@@ -43,7 +43,7 @@ function get_os_type()
             export RELEASE_ID=$(awk -F= '/^ID=/ {print $2;}' /etc/os-release)
             export RELEASE_VERSION=$(awk -F= '/^VERSION_ID=/ {print $2;}' /etc/os-release)
 
-            if [[ RELEASE_ID == "ubuntu" ]]; then
+            if [[ "${RELEASE_ID}" == "ubuntu" ]] || [[ "${RELEASE_ID}" == "debian" ]]; then
                 INSTALL=apt-get install
             else
                 echo "Sorry, $RELEASE_ID Linux is not supported yey."
