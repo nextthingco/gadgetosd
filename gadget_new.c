@@ -108,7 +108,11 @@ int gadget_new(int argc, char **argv)
         return 1;
     }
 
+#ifdef _WIN32
+    if(mkdir(target_dir)) {
+#else
     if(mkdir(target_dir,0775)) {
+#endif
         fprintf(stderr,"gadget new: ERROR: cannot create target directory '%s'\n",target_dir);
         return 1;
     }
