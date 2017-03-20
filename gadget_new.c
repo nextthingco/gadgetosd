@@ -15,12 +15,12 @@
 static int verbose=0;
 static char* type="docker";
 
-void gadget_new_help()
+void gadget_init_help()
 {
     printf(
             "Create embedded Linux apps - easy.\n"
             "\n"
-            "usage: gadget new [<args>] <name>\n"
+            "usage: gadget init [<args>] <name>\n"
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
@@ -32,7 +32,7 @@ void gadget_new_help()
           );
 }
 
-int gadget_new(int argc, char **argv)
+int gadget_init(int argc, char **argv)
 {
     int c;
     char *target_dir=0,*tmpstr=0;
@@ -70,7 +70,7 @@ int gadget_new(int argc, char **argv)
                 break;
 
             case 'h':
-                gadget_new_help();
+                gadget_init_help();
                 return 0;
 
             case 't':
@@ -90,13 +90,13 @@ int gadget_new(int argc, char **argv)
         puts ("verbose flag is set\n");
 
     if(optind == argc) {
-        fprintf(stderr,"gadget new: ERROR: no project name given\n");
+        fprintf(stderr,"gadget init: ERROR: no project name given\n");
         return 1;
     }
     target_dir=argv[optind++];
 
     if(optind < argc) {
-        fprintf(stderr,"gadget new: ERROR, unknown extra arguments: ");
+        fprintf(stderr,"gadget init: ERROR, unknown extra arguments: ");
         while (optind < argc)
             printf ("%s ", argv[optind++]);
         putchar ('\n');
@@ -104,7 +104,7 @@ int gadget_new(int argc, char **argv)
     }
 
     if(strcmp(type,"docker")) {
-        fprintf(stderr,"gadget new: ERROR, unknown project types: '%s'\n",type);
+        fprintf(stderr,"gadget init: ERROR, unknown project types: '%s'\n",type);
         return 1;
     }
 
@@ -113,12 +113,12 @@ int gadget_new(int argc, char **argv)
 #else
     if(mkdir(target_dir,0775)) {
 #endif
-        fprintf(stderr,"gadget new: ERROR: cannot create target directory '%s'\n",target_dir);
+        fprintf(stderr,"gadget init: ERROR: cannot create target directory '%s'\n",target_dir);
         return 1;
     }
 
     if( xmkdir(0775,"%s/%s",target_dir,".gadget") ) {
-        fprintf(stderr,"gadget new: ERROR: cannot create directory '%s/%s'\n",target_dir,".gadget");
+        fprintf(stderr,"gadget init: ERROR: cannot create directory '%s/%s'\n",target_dir,".gadget");
         return 1;
     }
 
@@ -130,7 +130,7 @@ int gadget_new(int argc, char **argv)
     //xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
     if( access( template_prefix, F_OK) == -1 ) {
-        fprintf(stderr, "gadget new: template prefix '%s' doesn't exist.\n", template_prefix);
+        fprintf(stderr, "gadget init: template prefix '%s' doesn't exist.\n", template_prefix);
         return 1;
     }
     // q'n'd fix:
@@ -139,7 +139,7 @@ int gadget_new(int argc, char **argv)
     int status = pclose(proc);
     if(status != 0) {
         free(cmd);
-        fprintf(stderr, "gadget new: ERROR copying template into new '%s'\n", target_dir);
+        fprintf(stderr, "gadget init: ERROR copying template into new '%s'\n", target_dir);
         return 1;
     }
  

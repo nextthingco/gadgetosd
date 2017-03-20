@@ -14,7 +14,7 @@ class TestGadget(unittest.TestCase):
 
     def test_gadget_init(self):
         client_env = self.server_env.copy()
-        self.client = subprocess.Popen( ["./gadget", "new", "testproject"], env=client_env)
+        self.client = subprocess.Popen( ["./gadget", "init", "testproject"], env=client_env)
         self.client.wait()
        
         self.assertIs(self.client.returncode, 0, "gadget init returned error code: "+ str(self.client.returncode) )
