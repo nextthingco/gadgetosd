@@ -52,19 +52,19 @@ gadget_deploy.o
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(MONGOOSE_FLAGS)
 
-all: inih mongoose gadgetosd gadget
+all: gadgetosd gadget
 
-gadgetosd: $(OBJ)
+gadgetosd: $(OBJ) libmongoose.a libinih.a
 	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 gadget: gadgetosd
 	ln -fs gadgetosd gadget
 
-mongoose:
+mongoose: mongoose.c mongoose.h
 	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_CFLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
-inih:
+inih: ini.c ini.h
 	${CC} -c ini.c $(CFLAGS) -o ini.o
 	${AR} rcs libinih.a ini.o
 
