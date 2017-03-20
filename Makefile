@@ -44,7 +44,7 @@ gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
 gadgetosd_api_application_stop.o \
 gadget.o \
-gadget_new.o \
+gadget_init.o \
 gadget_build.o \
 gadget_deploy.o 
 #gadget_project.o \
