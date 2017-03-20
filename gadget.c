@@ -19,7 +19,7 @@ typedef struct command {
 } command;
 
 int gadget_help(int argc, char **argv);
-extern int gadget_new(int argc, char **argv);
+extern int gadget_init(int argc, char **argv);
 extern int gadget_build(int argc, char **argv);
 extern int gadget_deploy(int argc, char **argv);
 
@@ -28,7 +28,7 @@ command commands[] = {
     { "-h", gadget_help },
     { "-?", gadget_help },
     { "help", gadget_help },
-    { "new", gadget_new },
+    { "init", gadget_init },
     { "build", gadget_build },
     { "deploy", gadget_deploy },
     { 0, 0 }
