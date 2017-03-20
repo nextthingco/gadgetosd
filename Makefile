@@ -1,7 +1,7 @@
 CC=gcc
 AR=ar
 CFLAGS=-I. -O2 -std=c11
-LIBS=-L. -lmongoose
+LIBS=-L. -lmongoose -linih
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
 ifeq ($(OS),Windows_NT)
@@ -40,6 +40,7 @@ endif
 
 OBJ = main.o utils.o \
 gadgetosd.o \
+gadget_project.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
 gadgetosd_api_application_stop.o \
@@ -47,7 +48,6 @@ gadget.o \
 gadget_init.o \
 gadget_build.o \
 gadget_deploy.o 
-#gadget_project.o \
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(MONGOOSE_FLAGS)

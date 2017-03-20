@@ -9,8 +9,10 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
+#include <libgen.h>
 #include <sys/stat.h>
 #include "utils.h"
+#include "gadget_project.h"
 
 static int verbose=0;
 static char* type="docker";
@@ -34,9 +36,9 @@ void gadget_init_help()
 
 int gadget_init(int argc, char **argv)
 {
-    int c;
-    char *target_dir=0,*tmpstr=0;
-    char *cmd=0;
+    int c=0, ret=0, cleanup=0;
+    char *target_dir=0,*project_name=0,*tmpstr=0,*cmd=0;
+    gadget_project_t* project=0;
 
     while (1)
     {
@@ -71,7 +73,8 @@ int gadget_init(int argc, char **argv)
 
             case 'h':
                 gadget_init_help();
-                return 0;
+                ret=0;
+                goto _return;
 
             case 't':
                 type=optarg;
@@ -91,7 +94,8 @@ int gadget_init(int argc, char **argv)
 
     if(optind == argc) {
         fprintf(stderr,"gadget init: ERROR: no project name given\n");
-        return 1;
+        ret=1;
+        goto _return;
     }
     target_dir=argv[optind++];
 
@@ -100,12 +104,14 @@ int gadget_init(int argc, char **argv)
         while (optind < argc)
             printf ("%s ", argv[optind++]);
         putchar ('\n');
-        return 1;
+        ret=1;
+        goto _return;
     }
 
     if(strcmp(type,"docker")) {
         fprintf(stderr,"gadget init: ERROR, unknown project types: '%s'\n",type);
-        return 1;
+        ret=1;
+        goto _return;
     }
 
 #ifdef _WIN32
@@ -114,12 +120,18 @@ int gadget_init(int argc, char **argv)
     if(mkdir(target_dir,0775)) {
 #endif
         fprintf(stderr,"gadget init: ERROR: cannot create target directory '%s'\n",target_dir);
-        return 1;
+        ret=1;
+        goto _return;
     }
+
+    //at this point we have created a project directory,
+    //which we need to cleanup if anything goes wrong
+    cleanup=1;
 
     if( xmkdir(0775,"%s/%s",target_dir,".gadget") ) {
         fprintf(stderr,"gadget init: ERROR: cannot create directory '%s/%s'\n",target_dir,".gadget");
-        return 1;
+        ret=1;
+        goto _return;
     }
 
     char* template_prefix = "/usr/local/share/gadget/templates/";
@@ -131,18 +143,49 @@ int gadget_init(int argc, char **argv)
 
     if( access( template_prefix, F_OK) == -1 ) {
         fprintf(stderr, "gadget init: template prefix '%s' doesn't exist.\n", template_prefix);
-        return 1;
+        ret=1;
+        goto _return;
     }
     // q'n'd fix:
     asprintf(&cmd,"cp -va /usr/local/share/gadget/templates/alpine/* %s/",target_dir);
     FILE* proc = popen(cmd, "r");
     int status = pclose(proc);
-    if(status != 0) {
-        free(cmd);
+    if(status < 0) {
         fprintf(stderr, "gadget init: ERROR copying template into new '%s'\n", target_dir);
-        return 1;
+        ret=1;
+        goto _return;
+    }
+
+    project_name=strdup(basename(target_dir));
+    if(!(project=gadget_project_create(project_name))) {
+        fprintf(stderr, "gadget init: internal error creating project\n");
+        ret=1; goto _return;
+    }
+    asprintf(&tmpstr,"%s/.gadget/config",target_dir);
+
+    if(gadget_project_to_ini(tmpstr,project)<0) {
+        fprintf(stderr, "gadget init: cannot write project file\n");
+        ret=1; goto _return;
+    }
+    cleanup=0;
+
+_return:
+    //todo cleanup freshly created directory on fail?
+    //but: do not cleanup previously exiting one!
+    if(tmpstr) free(tmpstr);
+
+    if(cleanup){
+        fprintf(stderr,"gadget init: cleaning up...\n");
+        if(asprintf(&tmpstr,"rm -rf %s",target_dir)>=0)
+        {
+            system(tmpstr);
+        }
+        if(tmpstr) free(tmpstr);
     }
  
+    if(cmd) free(cmd);
+    if(project) gadget_project_destruct(project);
+    if(project_name) free(project_name);
+
     return 0;
 }
-
