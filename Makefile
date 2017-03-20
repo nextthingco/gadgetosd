@@ -37,8 +37,15 @@ else
 endif
 
 OBJ = main.o utils.o \
-gadgetosd.o gadgetosd_docker.o gadgetosd_api_version.o\
-gadget.o gadget_new.o gadget_build.o gadget_deploy.o 
+gadget_project.o \
+gadgetosd.o \
+gadgetosd_api_version.o\
+gadgetosd_api_application_add.o \
+gadgetosd_api_application_stop.o \
+gadget.o \
+gadget_new.o \
+gadget_build.o \
+gadget_deploy.o 
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(MONGOOSE_FLAGS)
@@ -52,4 +59,4 @@ gadget: gadgetosd
 	ln -fs gadgetosd gadget
 
 clean:
-	rm *.o gadget gadgetosd
+	rm *.o *.a gadget gadgetosd

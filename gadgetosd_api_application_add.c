@@ -9,16 +9,15 @@ struct file_writer_data {
   size_t bytes_written;
 };
 
-void handle_docker_import(struct mg_connection *nc, int ev, void *p) {
+void handle_application_add(struct mg_connection *nc, int ev, void *p) {
   struct file_writer_data *data = (struct file_writer_data *) nc->user_data;
   struct mg_http_multipart_part *mp = (struct mg_http_multipart_part *) p;
-
+    
   switch (ev) {
     case MG_EV_HTTP_PART_BEGIN: {
       fprintf(stderr,"MG_EV_HTTP_PART_BEGIN\n");
       if( data == NULL ) {
         data = calloc(1, sizeof(struct file_writer_data));
-        //data->fp = tmpfile();
         system("docker stop gadget_build_123_c");
         system("docker rm gadget_build_123_c");
         system("docker rmi gadget_build_123");

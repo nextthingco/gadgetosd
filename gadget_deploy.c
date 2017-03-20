@@ -18,7 +18,8 @@ extern char* GADGETOSD_PORT;
 /* RESTful server host and request URI */
 static int s_exit_flag = 0;
     
-char *s_docker_import_url=0, *s_docker_run_url=0, *s_gadgetosd_ver_url=0;
+char *s_application_add_url=0;
+char *s_version_url=0;
 
 
 extern struct mg_connection *mg_connect_http_base(
@@ -154,9 +155,8 @@ int gadget_deploy(int argc,char **argv)
     char   *project_path=NULL;
     char   *payload_path=NULL;
 
-    asprintf(&s_docker_import_url,"http://%s:%s/docker/import",GADGETOSD_SERVER,GADGETOSD_PORT);
-    asprintf(&s_docker_run_url,"http://%s:%s/docker/run",GADGETOSD_SERVER,GADGETOSD_PORT);
-    asprintf(&s_gadgetosd_ver_url,"http://%s:%s/version",GADGETOSD_SERVER,GADGETOSD_PORT);
+    asprintf(&s_application_add_url,"http://%s:%s/api/v0/application/add",GADGETOSD_SERVER,GADGETOSD_PORT);
+    asprintf(&s_version_url,"http://%s:%s/api/version",GADGETOSD_SERVER,GADGETOSD_PORT);
 
     while (1)
     {
@@ -241,25 +241,23 @@ int gadget_deploy(int argc,char **argv)
 
     mg_mgr_init(&mgr, NULL);
 
-    nc = mg_connect_http(&mgr, ev_handler, s_gadgetosd_ver_url, NULL, NULL);
+    nc = mg_connect_http(&mgr, ev_handler, s_version_url, NULL, NULL);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", s_gadgetosd_ver_url);
+    fprintf(stderr,"requesting %s\n", s_version_url);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
     s_exit_flag=0; //needs to be reset here, otherwise the following fails!!
 
-
     fprintf(stderr,"sending %s...\n",payload_path);
-    nc = mg_postfile_http(&mgr, ev_handler, s_docker_import_url, payload_path);
+    nc = mg_postfile_http(&mgr, ev_handler, s_application_add_url, payload_path);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", s_docker_import_url);
+    fprintf(stderr,"requesting %s\n", s_application_add_url);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
 
     mg_mgr_free(&mgr);
 
 _return:
-    if(s_docker_import_url) free(s_docker_import_url);
-    if(s_docker_run_url) free(s_docker_run_url);
-    if(s_gadgetosd_ver_url) free(s_gadgetosd_ver_url);
+    if(s_application_add_url) free(s_application_add_url);
+    if(s_version_url) free(s_version_url);
     if(payload_path) free(payload_path);
 
     return 0;
