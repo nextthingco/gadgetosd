@@ -1,3 +1,10 @@
+/*
+ * ex: softtabstop=4 shiftwidth=4 tabstop=4 expandtab
+ *
+ * Copyright (c) 2017 Next Thing Co
+ * All rights reserved
+ */
+
 #include "mongoose.h"
 
 #ifndef MG_ENABLE_HTTP_STREAMING_MULTIPART
@@ -54,7 +61,12 @@ void handle_application_add(struct mg_connection *nc, int ev, void *p) {
 
     case MG_EV_HTTP_PART_END: {
       fprintf(stderr,"MG_EV_HTTP_PART_END\n");
+#ifdef _WIN32               // This is terrible
+      int ret=0;            // This won't work in production
+      pclose(data->fp);     // FIXME
+#else
       int ret=WEXITSTATUS(pclose(data->fp));
+#endif
       if(ret) {
           mg_printf(nc,
                   "HTTP/1.1 400 ERROR\r\n"

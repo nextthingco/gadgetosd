@@ -1,5 +1,9 @@
-// Copyright (c) 2017 Next Thing Co
-// All rights reserved
+/*
+ * ex: softtabstop=4 shiftwidth=4 tabstop=4 expandtab
+ *
+ * Copyright (c) 2017 Next Thing Co
+ * All rights reserved
+ */
 
 #ifndef MG_ENABLE_HTTP_STREAMING_MULTIPART
 #error MG_ENABLE_HTTP_STREAMING_MULTIPART not defined

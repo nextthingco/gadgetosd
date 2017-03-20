@@ -1,3 +1,10 @@
+/*
+ * ex: softtabstop=4 shiftwidth=4 tabstop=4 expandtab
+ *
+ * Copyright (c) 2017 Next Thing Co
+ * All rights reserved
+ */
+
 #define _GNU_SOURCE
 
 #include <unistd.h>
@@ -24,14 +31,18 @@ char* xsstrip(char *s)
 
 char *xuuid_generate()
 {
+#ifndef _WIN32          //PP guards, just temporary to get it to compile
   uuid_t uuid;
+#endif
+
   char *s_uuid=malloc(sizeof(char)*33);
 
+#ifndef _WIN32
   if(!s_uuid) return NULL;
 
   uuid_generate(uuid);
   for(int i=0;i<16;i++) { snprintf(s_uuid+(i*2),3,"%02x",uuid[i]); }
-
+#endif
   return s_uuid;
 }
 
@@ -112,7 +123,12 @@ int xmkpath(char *dir, mode_t mode)
 
 _return:
     if(cpy) free(cpy);
+
+#ifdef _WIN32
+    return mkdir(dir);
+#else
     return mkdir(dir, mode);
+#endif
 }
 
 int xmkdir(mode_t mode, const char *format, ...)
