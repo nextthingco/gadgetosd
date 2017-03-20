@@ -4,7 +4,7 @@
  * Copyright (c) 2017 Next Thing Co
  * All rights reserved
  */
-
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -119,20 +119,30 @@ int gadget_new(int argc, char **argv)
 
     if( xmkdir(0775,"%s/%s",target_dir,".gadget") ) {
         fprintf(stderr,"gadget new: ERROR: cannot create directory '%s/%s'\n",target_dir,".gadget");
-        return 0;
+        return 1;
     }
 
+    char* template_prefix = "/usr/local/share/gadget/templates/";
   
     // doesn't copy executable flags... 
     //xcp("/usr/local/share/gadget/templates/alpine/dockerfile",target_dir);
     //xcp("/usr/local/share/gadget/templates/alpine/blink-leds",target_dir);
     //xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
+    if( access( template_prefix, F_OK) == -1 ) {
+        fprintf(stderr, "gadget new: template prefix '%s' doesn't exist.\n", template_prefix);
+        return 1;
+    }
     // q'n'd fix:
-    asprintf(&cmd,"cp -va /usr/local/share/gadget/templates/alpine/* %s/",target_dir); if(system(cmd)) goto _return;
+    asprintf(&cmd,"cp -va /usr/local/share/gadget/templates/alpine/* %s/",target_dir);
+    FILE* proc = popen(cmd, "r");
+    int status = pclose();
+    if(status != 0) {
+        free(cmd);
+        fprintf(stderr, "gadget new: ERROR copying template into new '%s'\n", target_dir);
+        return 1;
+    }
  
-_return:
-    if(cmd) free(cmd);
     return 0;
 }
 
