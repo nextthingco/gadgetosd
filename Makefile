@@ -1,4 +1,5 @@
 CC=gcc
+AR=ar
 CFLAGS=-I. -O2 -std=c11
 LIBS=-L. -lmongoose
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
@@ -51,13 +52,17 @@ gadget_deploy.o
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(MONGOOSE_FLAGS)
 
-all: gadgetosd gadget
+all: mongoose gadgetosd gadget
 
 gadgetosd: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 gadget: gadgetosd
 	ln -fs gadgetosd gadget
+
+mongoose:
+	${CC} -c mongoose.c ${MONGOOSE_CFLAGS} -o mongoose.o
+	${AR} rcs libmongoose.a mongoose.o
 
 clean:
 	rm *.o *.a gadget gadgetosd
