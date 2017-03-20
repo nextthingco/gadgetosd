@@ -136,7 +136,7 @@ int gadget_new(int argc, char **argv)
     // q'n'd fix:
     asprintf(&cmd,"cp -va /usr/local/share/gadget/templates/alpine/* %s/",target_dir);
     FILE* proc = popen(cmd, "r");
-    int status = pclose();
+    int status = pclose(proc);
     if(status != 0) {
         free(cmd);
         fprintf(stderr, "gadget new: ERROR copying template into new '%s'\n", target_dir);

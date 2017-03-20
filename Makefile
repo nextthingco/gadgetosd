@@ -38,7 +38,6 @@ else
 endif
 
 OBJ = main.o utils.o \
-gadget_project.o \
 gadgetosd.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
@@ -47,6 +46,7 @@ gadget.o \
 gadget_new.o \
 gadget_build.o \
 gadget_deploy.o 
+#gadget_project.o \
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(MONGOOSE_FLAGS)
