@@ -9,6 +9,7 @@
 #define _UTILS_H_
 
 #include <sys/types.h>
+#include <stdio.h>
 
 #if defined(__linux__)
     #include <linux/limits.h>

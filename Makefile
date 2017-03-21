@@ -1,6 +1,6 @@
 CC=gcc
 AR=ar
-CFLAGS=-I. -O2 -std=c11
+CFLAGS=-I. -O2 -std=c11 -Wall
 LIBS=-L. -lmongoose -linih
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
