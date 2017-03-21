@@ -276,7 +276,7 @@ int xfrun(const char *cmd, FILE *out)
 
     if(!out) return 1;
     in = popen(cmd, "r");
-    if (in == NULL) return 1;
+    if (in == NULL) goto _return;
     
     if((ret=xfcp(in,out))<0) {
         pclose(in);
