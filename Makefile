@@ -60,11 +60,11 @@ gadgetosd: $(OBJ) libmongoose.a libinih.a
 gadget: gadgetosd
 	ln -fs gadgetosd gadget
 
-mongoose: mongoose.c mongoose.h
+libmongoose.a: mongoose.c mongoose.h
 	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_CFLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
-inih: ini.c ini.h
+libinih.a: ini.c ini.h
 	${CC} -c ini.c $(CFLAGS) -o ini.o
 	${AR} rcs libinih.a ini.o
 
