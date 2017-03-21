@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <limits.h>
 #include "utils.h"
+#include "gadget_project.h"
 
 static int verbose;
 
@@ -34,10 +35,10 @@ void gadget_build_help()
 int gadget_build(int argc, char **argv)
 {
     int c,ret=0;
-    char *project_path;
+    char *project_path=0,*project_filename=".gadget/config",*cmd=0,*container_name=0;
     char pwd[PATH_MAX]; //previous working dir
     char *export_cmd=NULL;
-    char *rm_cmd=NULL;
+    gadget_project_t *project=0;
 
     while (1)
     {
@@ -119,25 +120,37 @@ int gadget_build(int argc, char **argv)
         goto _return;
     }
 
-    //TODO: get rid of 'gadet_guild_123'
-    if(system("docker build -t gadget_build_123 .")) {
-
-        fprintf(stderr,"gadget build: ERROR: calling 'docker build' failed\n");
-        ret=errno;
+    if(!(project=gadget_project_deserialize(project_filename)))
+    {
+        fprintf(stderr,"gadget build: ERROR: cannot read gadget project file: '%s'\n",project_filename);
+        ret=1;
         goto _return;
     }
 
-    //TODO: get rid of 'gadet_guild_123'
-    if(system("docker save gadget_build_123 -o gadget_build_123.tar")) {
+    asprintf(&container_name,"%s_%s",project->name,project->id);
 
-        fprintf(stderr,"gadget build: ERROR: calling 'docker create' failed\n");
+    asprintf(&cmd,"docker build -t %s .",container_name);
+    if(system(cmd)) {
+
+        fprintf(stderr,"gadget build: ERROR: calling '%s' failed\n",cmd);
+        ret=errno;
+        goto _return;
+    }
+    free(cmd);
+
+    asprintf(&cmd,"docker save %s -o %s.tar",container_name,container_name);
+    if(system(cmd)) {
+
+        fprintf(stderr,"gadget build: ERROR: calling '%s' failed\n",cmd);
         ret=errno;
         goto _return;
     }
 
 _return:
     if(export_cmd) free(export_cmd);
-    if(rm_cmd) free(rm_cmd);
+    if(cmd) free(cmd);
+    if(container_name) free(container_name);
+
     if(chdir(pwd)) {
         fprintf(stderr,"gadget build: ERROR: cannot return to previous directory '%s'\n",pwd);
         ret=errno;
