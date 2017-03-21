@@ -11,6 +11,7 @@
 #include <getopt.h>
 #include "mongoose.h"
 #include "utils.h"
+#include "gadget_project.h"
 
 static int verbose;
 
@@ -156,6 +157,7 @@ int gadget_deploy(int argc,char **argv)
     struct mg_connection *nc=NULL;
     char   *project_path=NULL;
     char   *payload_path=NULL;
+    gadget_project_t *project=0;
 
     asprintf(&s_application_add_url,"http://%s:%s/api/v0/application/add",GADGETOSD_SERVER,GADGETOSD_PORT);
     asprintf(&s_version_url,"http://%s:%s/api/version",GADGETOSD_SERVER,GADGETOSD_PORT);
@@ -222,14 +224,18 @@ int gadget_deploy(int argc,char **argv)
         goto _return;
     }
 
-
     if(!xis_dir("%s/.gadget",project_path)) {
         fprintf(stderr,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
         ret=1;
         goto _return;
     }
 
-    if(asprintf(&payload_path,"%s/gadget_build_123.tar",project_path)<0)
+    if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
+        fprintf(stderr,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+        goto _return;
+    }
+
+    if(asprintf(&payload_path,"%s/%s_%s.tar",project_path,project->name,project->id)<0)
     {
         fprintf(stderr,"gadget build: ERROR: asprintf returned negative value\n");
         goto _return;
@@ -261,6 +267,7 @@ _return:
     if(s_application_add_url) free(s_application_add_url);
     if(s_version_url) free(s_version_url);
     if(payload_path) free(payload_path);
+    if(project) gadget_project_destruct(project);
 
     return 0;
 }
