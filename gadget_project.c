@@ -5,6 +5,7 @@
  * All rights reserved
  */
 
+#include <stdarg.h>
 #include <yaml.h>
 #include "gadget_project.h"
 #include "utils.h"
@@ -61,7 +62,8 @@ static int gadget_project_ini_handler(void* user,
 {
     gadget_project_t* p = (gadget_project_t*)user;
 
-    #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+    #define MATCH(s, n) strcasecmp(section, s) == 0 && strcasecmp(name, n) == 0
+    //TODO: in windows to stricmp()
 
     if (MATCH("project", "name")) {
         p->name = strdup(value);
@@ -74,27 +76,37 @@ static int gadget_project_ini_handler(void* user,
     return 1;
 }
 
-gadget_project_t* gadget_project_deserialize( char* filename )
+gadget_project_t* gadget_project_deserialize( char* filenameformat, ... )
 {
+    char *filename = 0;
     gadget_project_t *p = 0;
+    va_list args;
 
-    if(!(p=malloc(sizeof(gadget_project_t)))) {
-        return 0;
-    }
+    if(!(p=malloc(sizeof(gadget_project_t)))) goto _error;
+
+    va_start(args, filenameformat);
+    if(vasprintf(&filename, filenameformat, args)<0) goto _error;
+    va_end(args);
 
     if(ini_parse(filename, gadget_project_ini_handler, p) < 0) {
         fprintf(stderr,"gadget_project_deserialize(): can't load '%s'\n",filename);
-        return 0;
+        goto _error;
     }
 
     if(!(p->name) || !strlen(p->name) || !(p->id) || !strlen(p->id)) {
         fprintf(stderr,"gadget_project_deserialize(): incompatible project file '%s'\n",filename);
-        gadget_project_destruct(p);
-        return 0;
+        goto _error;
     } else {
         fprintf(stderr,"gadget_project_deserialize(): project loaded from '%s': name=%s, id=%s\n",
             filename, p->name, p->id );
     }   
 
+    goto _return;
+_error:
+    if(p) gadget_project_destruct(p);
+    p=0;
+
+_return:
+    if(filename) free(filename);
     return p;
 }

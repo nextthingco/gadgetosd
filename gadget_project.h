@@ -16,6 +16,6 @@ void gadget_project_destruct(gadget_project_t *p);
 int gadget_project_serialize( char* filename, gadget_project_t *p );
 
 // de-serialize from ini file
-gadget_project_t* gadget_project_deserialize( char* filename );
+gadget_project_t* gadget_project_deserialize( char* filenameformat, ... );
 
 #endif
