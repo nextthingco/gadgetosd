@@ -60,7 +60,7 @@ int gadget_help(int argc, char **argv)
 "usage: gadget <command> [<args>]\n"
 "\n"
 "common gadget commands: \n"
-"  new         Create an empty gadget project \n"
+"  init        Create an empty gadget project \n"
 "  build       Build the project in the current directory\n"
 "  deploy      Deploys the project in the current directory\n"
 "\n"
