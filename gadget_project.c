@@ -6,7 +6,6 @@
  */
 
 #include <stdarg.h>
-#include <yaml.h>
 #include "gadget_project.h"
 #include "utils.h"
 #include "ini.h"
