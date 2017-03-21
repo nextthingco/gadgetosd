@@ -163,7 +163,7 @@ int gadget_init(int argc, char **argv)
     }
     asprintf(&tmpstr,"%s/.gadget/config",target_dir);
 
-    if(gadget_project_to_ini(tmpstr,project)<0) {
+    if(gadget_project_serialize(tmpstr,project)<0) {
         fprintf(stderr, "gadget init: cannot write project file\n");
         ret=1; goto _return;
     }

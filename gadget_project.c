@@ -35,7 +35,7 @@ void gadget_project_destruct(gadget_project_t *p)
     }
 }
 
-int gadget_project_to_ini( char* filename, gadget_project_t* p )
+int gadget_project_serialize( char* filename, gadget_project_t* p )
 {
     FILE *f =  0;
 
@@ -43,9 +43,9 @@ int gadget_project_to_ini( char* filename, gadget_project_t* p )
 
     if(!(f=fopen(filename,"w"))) return -1;
     fprintf(f,
-            "[Project]\n"
-            "name=%s\n"
-            "id=%s\n",
+            "[project]\n"
+            "name = %s\n"
+            "id = %s\n",
             p->name,
             p->id
     );  
@@ -74,7 +74,7 @@ static int gadget_project_ini_handler(void* user,
     return 1;
 }
 
-gadget_project_t* gadget_project_from_ini( char* filename )
+gadget_project_t* gadget_project_deserialize( char* filename )
 {
     gadget_project_t *p = 0;
 
@@ -82,13 +82,19 @@ gadget_project_t* gadget_project_from_ini( char* filename )
         return 0;
     }
 
-    if (ini_parse(filename, gadget_project_ini_handler, p) < 0) {
-        fprintf(stderr,"gadget_project_from_ini(): can't load '%s'\n",filename);
+    if(ini_parse(filename, gadget_project_ini_handler, p) < 0) {
+        fprintf(stderr,"gadget_project_deserialize(): can't load '%s'\n",filename);
         return 0;
     }
 
-    fprintf(stderr,"Project loaded from '%s': name=%s, id=%s\n",
+    if(!(p->name) || !strlen(p->name) || !(p->id) || !strlen(p->id)) {
+        fprintf(stderr,"gadget_project_deserialize(): incompatible project file '%s'\n",filename);
+        gadget_project_destruct(p);
+        return 0;
+    } else {
+        fprintf(stderr,"gadget_project_deserialize(): project loaded from '%s': name=%s, id=%s\n",
             filename, p->name, p->id );
+    }   
 
     return p;
 }
