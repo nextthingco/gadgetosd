@@ -2,8 +2,6 @@
 #include "mongoose.h"
 
 void handle_version(struct mg_connection *nc, int ev, void *p) {
-    struct http_message *hm = (struct http_message *) p;
-
     switch (ev) {
         case MG_EV_HTTP_REQUEST: {
             mg_printf(nc, 

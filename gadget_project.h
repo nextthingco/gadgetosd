@@ -4,6 +4,8 @@
 typedef struct gadget_project_t {
     char *name;
     char *id;
+    char *container_name;
+    char *container_image_name;
 } gadget_project_t;
 
 // create a new gadget_project_t

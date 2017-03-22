@@ -67,7 +67,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
     char *user = NULL, *pass = NULL, *addr = NULL;
     const char *path = NULL;
     struct mbuf auth;
-    struct mg_connection *nc;
+    struct mg_connection *nc=NULL;
     FILE* fp=NULL;
     size_t filesize;
     struct mg_connect_opts opts;

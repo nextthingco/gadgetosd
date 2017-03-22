@@ -5,19 +5,54 @@
  * All rights reserved
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include "gadget_project.h"
 #include "utils.h"
 #include "ini.h"
+
+
+//helper function
+char *gadget_project_container_image_name( gadget_project_t* p )
+{
+    if(!p) return 0;
+    if(p->container_image_name) return p->container_image_name;
+    if(!p->name || !p->id) return 0;
+
+    if(asprintf(&p->container_image_name,"%s_%s",p->name,p->id)<0)
+        return 0;
+
+    return p->container_image_name;
+}
+
+//helper function
+char *gadget_project_container_name( gadget_project_t* p )
+{
+    if(!p) return 0;
+    if(p->container_name) return p->container_name;
+    if(!p->name || !p->id) return 0;
+
+    if(asprintf(&p->container_name,"%s_%s_c",p->name,p->id)<0)
+        return 0;
+
+    return p->container_name;
+}
 
 // create a new gadget_project_t
 gadget_project_t* gadget_project_create( char *name )
 {
     gadget_project_t *p = 0;
 
-    if(!(p=malloc(sizeof(gadget_project_t)))) goto _error;
+    if(!(p=(gadget_project_t*)malloc(sizeof(gadget_project_t)))) goto _error;
+    memset(p,0,sizeof(gadget_project_t));
+
     if(!(p->name=strdup(name))) goto _error;
     if(!(p->id=xuuid_generate())) goto _error;
+
+    if(!gadget_project_container_name(p)) goto _error;
+    if(!gadget_project_container_image_name(p)) goto _error;
 
     return p;
 
@@ -29,8 +64,10 @@ _error:
 void gadget_project_destruct(gadget_project_t *p)
 {
     if(p) {
-        if(p->name) free(p->name);
-        if(p->id)   free(p->id);
+        if(p->name)                 free(p->name);
+        if(p->id)                   free(p->id);
+        if(p->container_name)       free(p->container_name);
+        if(p->container_image_name) free(p->container_image_name);
         free(p);
     }
 }
@@ -81,7 +118,8 @@ gadget_project_t* gadget_project_deserialize( char* filenameformat, ... )
     gadget_project_t *p = 0;
     va_list args;
 
-    if(!(p=malloc(sizeof(gadget_project_t)))) goto _error;
+    if(!(p=(gadget_project_t*)malloc(sizeof(gadget_project_t)))) goto _error;
+    memset(p,0,sizeof(gadget_project_t));
 
     va_start(args, filenameformat);
     if(vasprintf(&filename, filenameformat, args)<0) goto _error;
@@ -99,6 +137,9 @@ gadget_project_t* gadget_project_deserialize( char* filenameformat, ... )
         fprintf(stderr,"gadget_project_deserialize(): project loaded from '%s': name=%s, id=%s\n",
             filename, p->name, p->id );
     }   
+
+    if(!gadget_project_container_name(p)) goto _error;
+    if(!gadget_project_container_image_name(p)) goto _error;
 
     goto _return;
 _error:
