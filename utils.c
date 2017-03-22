@@ -122,9 +122,14 @@ int xmkpath(char *dir, mode_t mode)
 
     if(xis_dir(dir)) { return 0; }
 
-    char *parent = dirname(strdup(dir));
+    char *basedir = strdup(dir);
 
+    //NOTE: do not try and free this as dirname does weird string reuse things
+    char *parent = dirname(basedir);
+
+    // if parent isn't .
     if(strcmp(parent, ".")) {
+        // attempt to create parent
         if(xmkpath(parent, mode)) {
             ret = 1;
             goto _return;
@@ -136,7 +141,7 @@ int xmkpath(char *dir, mode_t mode)
     ret = mkdir(dir, mode);
 #endif
 _return:
-    free(parent);
+    free(basedir);
     return ret;
 
 }
