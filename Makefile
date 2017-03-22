@@ -51,6 +51,7 @@ gadget_project.o \
 gadget.o \
 gadget_init.o \
 gadget_build.o \
+gadget_stop.o \
 gadget_deploy.o 
 
 %.o: %.c
@@ -69,7 +70,7 @@ gadget: $(G_OBJ) libmongoose.a libinih.a
 
 libmongoose.a: mongoose.c mongoose.h
 	@echo "  > Building $@"
-	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_CFLAGS) -o mongoose.o
+	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_FLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
 libinih.a: ini.c ini.h
