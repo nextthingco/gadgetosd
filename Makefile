@@ -55,25 +55,31 @@ gadget_stop.o \
 gadget_deploy.o 
 
 %.o: %.c
+	@echo "  > Building $@"
 	$(CC) -c -o $@ $< $(CFLAGS) $(MONGOOSE_FLAGS)
 
 all: gadgetosd gadget
 
 gadgetosd: $(GOSD_OBJ) libmongoose.a libinih.a
+	@echo "  > Building $@"
 	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 gadget: $(G_OBJ) libmongoose.a libinih.a
+	@echo "  > Building $@"
 	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 libmongoose.a: mongoose.c mongoose.h
+	@echo "  > Building $@"
 	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_FLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
 libinih.a: ini.c ini.h
+	@echo "  > Building $@"
 	${CC} -c ini.c $(CFLAGS) -o ini.o
 	${AR} rcs libinih.a ini.o
 
 test_utils: test_utils.o utils.o libmongoose.a libinih.a
+	@echo "  > Building $@"
 	$(CC) -o test_utils test_utils.o utils.o $(CFLAGS) $(LIBS)
 clean:
 	rm *.o *.a gadget gadgetosd
