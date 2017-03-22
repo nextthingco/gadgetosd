@@ -51,6 +51,7 @@ gadget_project.o \
 gadget.o \
 gadget_init.o \
 gadget_build.o \
+gadget_stop.o \
 gadget_deploy.o 
 
 %.o: %.c
