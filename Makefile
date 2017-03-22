@@ -1,6 +1,6 @@
 CC=gcc
 AR=ar
-CFLAGS=-I. -O2 -std=c11 -Wall
+CFLAGS=-I. -O2 -std=c11 -Wall -g
 LIBS=-L. -lmongoose -linih
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
@@ -72,5 +72,7 @@ libinih.a: ini.c ini.h
 	${CC} -c ini.c $(CFLAGS) -o ini.o
 	${AR} rcs libinih.a ini.o
 
+test_utils: test_utils.o utils.o libmongoose.a libinih.a
+	$(CC) -o test_utils test_utils.o utils.o $(CFLAGS) $(LIBS)
 clean:
 	rm *.o *.a gadget gadgetosd
