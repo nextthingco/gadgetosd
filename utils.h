@@ -41,4 +41,6 @@ extern int xfrun(const char *cmd, FILE *out);
 //NOTE: please free() output_buf yourself!
 extern int xrun(const char *cmd, char **output_buf);
 
+extern int xexec(const char* process, ...);
+
 #endif //_UTILS_H_

@@ -15,6 +15,8 @@
 #include <libgen.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <uuid/uuid.h>
 
 char* xsstrip(char *s)
@@ -110,31 +112,39 @@ _return:
     return ret;
 }
 
-
 int xmkpath(char *dir, mode_t mode)
 {
-    int ret=0;
-    char *cpy=0;
+    int ret = 0;
+    if(!dir) {
+        errno = EINVAL;
+        return 1;
+    }
 
-    if(!dir) { errno = EINVAL; ret=1; goto _return; }
-    if(xis_dir(dir)) { ret=0; goto _return; }
+    if(xis_dir(dir)) { return 0; }
 
-    xmkpath(dirname((cpy=strdup(dir))), mode);
+    char *parent = dirname(strdup(dir));
 
-_return:
-    if(cpy) free(cpy);
-
+    if(strcmp(parent, ".")) {
+        if(xmkpath(parent, mode)) {
+            ret = 1;
+            goto _return;
+        }
+    }
 #ifdef _WIN32
-    return mkdir(dir);
+    ret = mkdir(dir);
 #else
-    return mkdir(dir, mode);
+    ret = mkdir(dir, mode);
 #endif
+_return:
+    free(parent);
+    return ret;
+
 }
 
 int xmkdir(mode_t mode, const char *format, ...)
 {
     char *tmpstr=0;
-    int ret=0;
+    int ret = 0;
     va_list args;
 
     va_start(args, format);
@@ -153,7 +163,7 @@ int xfcp(FILE *src, FILE *dst)
 {
     const int buf_size=4096;
     static char buf[4096];
-    int r,w,total=0;
+    int r = 0,w = 0, total = 0;
 
     while(!feof(src)) {
         r=fread(buf,sizeof(char),buf_size,src);
@@ -305,4 +315,55 @@ int xrun(const char *cmd, char **output_buf)
     *output_buf=ptr;
 
     return ret;
+}
+
+int xexec(const char* process, ...) {
+    //int ret = 0;
+    const int args_max = 64;
+    int child_status = 0;
+    int status;
+    pid_t pid;
+    va_list varargs;
+    char* args[args_max];
+    int args_count = 0;
+
+    memset(args, 0, sizeof(args));
+    va_start(varargs, process);
+    while(args_count < args_max) {
+        args[args_count] = va_arg(varargs, char*);
+
+        if(args[args_count] == (char*) 0)
+            break;
+        args_count++;
+    }
+
+    // fork off executable
+    pid = fork();
+
+    // if we're in child process
+    if(pid == 0) {
+        if(execvp(process, (char**)args)) {
+            fprintf(stderr, "ERROR occurred launching `%s`\n", process);
+        }
+        return 1;
+    }
+    // else an error occurred
+    else if(pid < 0){
+        fprintf(stderr, "ERROR forking process for `%s`\n", process);
+        return 1;
+    }
+    // else we're parent
+    pid_t wait_status = waitpid(pid, &child_status, WNOHANG);
+    if(wait_status == -1) {
+        fprintf(stderr, "ERROR\n");
+        return 1;
+    }
+    if(WIFEXITED(child_status)){
+        status = WEXITSTATUS(child_status);
+        if(status){
+            fprintf(stderr, "ERROR from `%s`\n", process);
+            return 1;
+        }
+    }
+    return 0;
 }
