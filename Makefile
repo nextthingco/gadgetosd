@@ -66,7 +66,7 @@ gadget: $(G_OBJ) libmongoose.a libinih.a
 	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 libmongoose.a: mongoose.c mongoose.h
-	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_CFLAGS) -o mongoose.o
+	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_FLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
 libinih.a: ini.c ini.h
