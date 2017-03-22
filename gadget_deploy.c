@@ -12,18 +12,12 @@
 #include "mongoose.h"
 #include "utils.h"
 #include "gadget_project.h"
+#include "config.h"
 
 static int verbose;
 
-extern char* GADGETOSD_SERVER;
-extern char* GADGETOSD_PORT;
-
 /* RESTful server host and request URI */
 static int s_exit_flag = 0;
-    
-char *s_application_add_url=0;
-char *s_version_url=0;
-
 
 extern struct mg_connection *mg_connect_http_base(
     struct mg_mgr *mgr, mg_event_handler_t ev_handler,
@@ -117,7 +111,6 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
         if(read<0) {
             fprintf(stderr,"ERROR: while reading file");
         }
-//        fprintf(stderr,".");
         mg_send(nc,buf,read);
         mg_mgr_poll(mgr, 1);
     }
@@ -158,9 +151,6 @@ int gadget_deploy(int argc,char **argv)
     char   *project_path=NULL;
     char   *payload_path=NULL;
     gadget_project_t *project=0;
-
-    asprintf(&s_application_add_url,"http://%s:%s/api/v0/application/add",GADGETOSD_SERVER,GADGETOSD_PORT);
-    asprintf(&s_version_url,"http://%s:%s/api/version",GADGETOSD_SERVER,GADGETOSD_PORT);
 
     while (1)
     {
@@ -249,23 +239,21 @@ int gadget_deploy(int argc,char **argv)
 
     mg_mgr_init(&mgr, NULL);
 
-    nc = mg_connect_http(&mgr, ev_handler, s_version_url, NULL, NULL);
+    nc = mg_connect_http(&mgr, ev_handler, URL_VERSION, NULL, NULL);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", s_version_url);
+    fprintf(stderr,"requesting %s\n", URL_VERSION);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
     s_exit_flag=0; //needs to be reset here, otherwise the following fails!!
 
     fprintf(stderr,"sending %s...\n",payload_path);
-    nc = mg_postfile_http(&mgr, ev_handler, s_application_add_url, payload_path);
+    nc = mg_postfile_http(&mgr, ev_handler, URL_APPLICATION_ADD, payload_path);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", s_application_add_url);
+    fprintf(stderr,"requesting %s\n", URL_APPLICATION_ADD);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
 
     mg_mgr_free(&mgr);
 
 _return:
-    if(s_application_add_url) free(s_application_add_url);
-    if(s_version_url) free(s_version_url);
     if(payload_path) free(payload_path);
     if(project) gadget_project_destruct(project);
 

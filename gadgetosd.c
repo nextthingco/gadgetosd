@@ -13,8 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mongoose.h"
-
-extern char *GADGETOSD_PORT;
+#include "config.h"
 
 extern void handle_version(struct mg_connection *nc, int ev, void *p);
 extern void handle_application_add(struct mg_connection *nc, int ev, void *p);
@@ -42,19 +41,22 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 
 int main(int argc, char **argv)
 {
+    int ret=0;
     struct mg_mgr mgr;
     struct mg_connection *nc;
+
+    initialize();
 
     mg_mgr_init(&mgr, NULL);
     nc = mg_bind(&mgr, GADGETOSD_PORT, ev_handler);
     if(!nc) { 
         fprintf(stderr,"gadgetosd: ERROR: cannot create network connection\n");
-        return 1;
+        ret=1; goto _return;
     }
 
-    mg_register_http_endpoint(nc, "/api/version", handle_version);
-    mg_register_http_endpoint(nc, "/api/v0/application/add", handle_application_add);
-    mg_register_http_endpoint(nc, "/api/v0/application/stop", handle_application_stop);
+    mg_register_http_endpoint(nc, ENDPOINT_VERSION,          handle_version);
+    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_ADD,  handle_application_add);
+    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_STOP, handle_application_stop);
     mg_set_protocol_http_websocket(nc);
 
     fprintf(stderr,"gadgetosd running on port %s\n", GADGETOSD_PORT);
@@ -64,5 +66,7 @@ int main(int argc, char **argv)
     }
     mg_mgr_free(&mgr);
 
-    return 0;
+_return:
+    deinitialize();
+    return ret;
 }

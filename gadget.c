@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
 #include "version.h"
 #include "mongoose.h"
 
@@ -39,19 +40,26 @@ command commands[] = {
 
 int main(int argc, char **argv)
 {
-    int i;
+    int i=0,ret=0;
 
     if(argc<2) {
         return gadget_help(argc,argv);
     }
 
+    initialize();
     for(i=0; commands[i].name; i++) {
-        if(!strcmp(argv[1],commands[i].name))
-            return commands[i].function(argc-1,&argv[1]);
+        if(!strcmp(argv[1],commands[i].name)) {
+            ret=commands[i].function(argc-1,&argv[1]);
+            goto _return;
+        }
     }
 
     printf("gadget: '%s' is not a gadget command. Try %s --help.\n",argv[1],argv[0]);
-    return 1;
+    ret = 1;
+
+_return:
+    deinitialize();
+    return ret;
 }
 
 int gadget_help(int argc, char **argv)

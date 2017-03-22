@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "mongoose.h"
+
+#include "config.h"
 #include "utils.h"
 #include "gadget_project.h"
 
@@ -71,8 +73,7 @@ int gadget_stop(int argc,char **argv)
     char   *project_path=NULL;
     char   *payload_path=NULL;
     gadget_project_t *project=0;
-    char *s_application_stop_url=0;
-    char *s_version_url=0;
+    char   *tmpstr=0;
 
     while (1)
     {
@@ -147,23 +148,19 @@ int gadget_stop(int argc,char **argv)
         goto _return;
     }
     
-    asprintf(&s_version_url,"http://%s:%s/api/version",GADGETOSD_SERVER,GADGETOSD_PORT);
-
-    fprintf(stderr,"** building s_appliction_stop_url...\n");
-    asprintf(&s_application_stop_url,"http://%s:%s/api/v0/application/stop?container=%s",GADGETOSD_SERVER,GADGETOSD_PORT,project->container_name);
-    fprintf(stderr,"** done building s_appliction_stop_url\n");
+    asprintf(&tmpstr,"%s?container=%s",URL_APPLICATION_STOP,project->container_name);
 
     mg_mgr_init(&mgr, NULL);
 
-    nc = mg_connect_http(&mgr, ev_handler, s_version_url, NULL, NULL);
+    nc = mg_connect_http(&mgr, ev_handler, URL_VERSION, NULL, NULL);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", s_version_url);
+    fprintf(stderr,"requesting %s\n", URL_VERSION );
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
     s_exit_flag=0; //needs to be reset here, otherwise the following fails!!
 
-    nc = mg_connect_http(&mgr, ev_handler, s_application_stop_url , NULL, NULL);
+    nc = mg_connect_http(&mgr, ev_handler, tmpstr, NULL, NULL);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", s_application_stop_url);
+    fprintf(stderr,"requesting %s\n", URL_APPLICATION_STOP);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
     s_exit_flag=0; //needs to be reset here, otherwise the following fails!!
 
@@ -171,8 +168,7 @@ int gadget_stop(int argc,char **argv)
     mg_mgr_free(&mgr);
 
 _return:
-    if(s_application_stop_url) free(s_application_stop_url);
-    if(s_version_url) free(s_version_url);
+    if(tmpstr) free(tmpstr);
     if(payload_path) free(payload_path);
     if(project) gadget_project_destruct(project);
 

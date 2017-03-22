@@ -44,7 +44,6 @@ void handle_application_add(struct mg_connection *nc, int ev, void *p) {
     }
 
     case MG_EV_HTTP_PART_DATA: {
-      //fwrite(mp->data.p,1, mp->data.len, stderr);
       if( fwrite(mp->data.p, 1, mp->data.len, data->fp) != mp->data.len ) {
         fprintf(stderr,"FAIL\n\n");
         mg_printf(nc, "%s",
