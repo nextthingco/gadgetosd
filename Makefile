@@ -38,14 +38,16 @@ else
     endif
 endif
 
-OBJ = main.o \
-utils.o \
+GOSD_OBJ = utils.o \
 config.o \
 gadgetosd.o \
-gadget_project.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
-gadgetosd_api_application_stop.o \
+gadgetosd_api_application_stop.o
+
+G_OBJ = utils.o \
+config.o \
+gadget_project.o \
 gadget.o \
 gadget_init.o \
 gadget_build.o \
@@ -56,11 +58,11 @@ gadget_deploy.o
 
 all: gadgetosd gadget
 
-gadgetosd: $(OBJ) libmongoose.a libinih.a
+gadgetosd: $(GOSD_OBJ) libmongoose.a libinih.a
 	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
-gadget: gadgetosd
-	ln -fs gadgetosd gadget
+gadget: $(G_OBJ) libmongoose.a libinih.a
+	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 libmongoose.a: mongoose.c mongoose.h
 	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_CFLAGS) -o mongoose.o
