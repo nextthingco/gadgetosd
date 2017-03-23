@@ -40,6 +40,7 @@ command commands[] = {
     { "stop",   gadget_stop },
     { "start",  gadget_start },
     { "delete", gadget_delete },
+    { "purge",  gadget_purge },
     { 0, 0 }
 };
 
