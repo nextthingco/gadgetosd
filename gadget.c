@@ -24,16 +24,18 @@ extern int gadget_init(int argc, char **argv);
 extern int gadget_build(int argc, char **argv);
 extern int gadget_deploy(int argc, char **argv);
 extern int gadget_stop(int argc, char **argv);
+extern int gadget_start(int argc, char **argv);
 
 command commands[] = {
     { "--help", gadget_help },
-    { "-h", gadget_help },
-    { "-?", gadget_help },
-    { "help", gadget_help },
-    { "init", gadget_init },
-    { "build", gadget_build },
+    { "-h",     gadget_help },
+    { "-?",     gadget_help },
+    { "help",   gadget_help },
+    { "init",   gadget_init },
+    { "build",  gadget_build },
     { "deploy", gadget_deploy },
-    { "stop", gadget_stop },
+    { "stop",   gadget_stop },
+    { "start",  gadget_start },
     { 0, 0 }
 };
 
