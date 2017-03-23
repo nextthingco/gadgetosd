@@ -1,26 +1,6 @@
 #include "version.h"
 #include "mongoose.h"
-
-int get_var(struct mg_connection *nc, void *p, char *name, char* dst, size_t dst_size)
-{
-    int r;
-    struct http_message *hm = (struct http_message *) p;
-
-    r=mg_get_http_var(&hm->query_string, name, dst, dst_size);
-
-    if(r<0) {
-        mg_printf(nc,
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/html\r\n"
-                "Connection: close\r\n"
-                "\r\n"
-                "ERROR: var %s missing\r\n"
-                "\r\n", name );
-                nc->flags |= MG_F_SEND_AND_CLOSE;
-    }
-    return r;
-}
-
+#include "mongoose_utils.h"
 
 void handle_application_start(struct mg_connection *nc, int ev, void *p)
 {
@@ -33,9 +13,9 @@ void handle_application_start(struct mg_connection *nc, int ev, void *p)
 
     switch (ev) {
         case MG_EV_HTTP_REQUEST: {
-            r=get_var(nc,p,"container",container_name, sizeof(container_name));
+            r=mgu_get_var(nc,p,"container",container_name, sizeof(container_name));
             if(r<0) break;
-            r=get_var(nc,p,"image", container_image_name, sizeof(container_image_name));
+            r=mgu_get_var(nc,p,"image", container_image_name, sizeof(container_image_name));
             if(r<0) break;
 
             snprintf(cmd,sizeof(cmd),"docker run --privileged -v /sys:/sys --name %s %s&",container_name,container_image_name);

@@ -40,6 +40,7 @@ endif
 
 GOSD_OBJ = utils.o \
 config.o \
+mongoose_utils.o \
 gadgetosd.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
@@ -48,6 +49,7 @@ gadgetosd_api_application_stop.o
 
 G_OBJ = utils.o \
 config.o \
+mongoose_utils.o \
 gadget_project.o \
 gadget.o \
 gadget_init.o \
