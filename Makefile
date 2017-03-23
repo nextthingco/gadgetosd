@@ -5,7 +5,7 @@ LIBS=-L. -lmongoose -linih
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
 ifeq ($(OS),Windows_NT)
-    CFLAGS += -D _WIN32
+#    CFLAGS += -D _WIN32
     LIBS += -lws2_32
     ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
         CFLAGS += -D AMD64
