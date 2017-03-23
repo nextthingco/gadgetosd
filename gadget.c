@@ -64,7 +64,6 @@ int main(int argc, char **argv)
     ret = 1;
 
 _return:
-    deinitialize();
     return ret;
 }
 

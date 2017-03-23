@@ -23,9 +23,32 @@ int mgu_get_var(struct mg_connection *nc, void *p, char *name, char* dst, size_t
     return r;
 }
 
+//------------------------------------------------------------------------------
+
+char *build_url( char* endpoint, gadget_project_t *project)
+{
+    char *tmpstr=0;
+
+    if( asprintf(&tmpstr,
+                 "http://%s:%s%s?container=%s&image=%s",
+                 GADGETOSD_SERVER,
+                 GADGETOSD_PORT,
+                 endpoint,
+                 project->container_name,
+                 project->container_image_name
+                ) < 0
+      )
+        return 0;
+
+    return tmpstr;
+}
+
+//------------------------------------------------------------------------------
+
 static int do_rpc_exit_flag=0;
 
-static void do_rpc_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
+static void do_rpc_ev_handler(struct mg_connection *nc, int ev, void *ev_data)
+{
     struct http_message *hm = (struct http_message *) ev_data;
     int connect_status;
 
@@ -55,34 +78,28 @@ static void do_rpc_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
 
 int do_rpc(char *endpoint,gadget_project_t *project)
 {
+    int ret=0;
     struct mg_mgr mgr;
     struct mg_connection *nc=NULL;
     char *tmpstr=0;
 
     do_rpc_exit_flag=0;
-
-    asprintf(&tmpstr,"%s?container=%s&image=%s",
-             endpoint,\
-             project->container_name,\
-             project->container_image_name);
-
     mg_mgr_init(&mgr, NULL);
 
-    nc = mg_connect_http(&mgr, do_rpc_ev_handler, URL_VERSION, NULL, NULL);
-    mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", URL_VERSION );
-    while (do_rpc_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
-    do_rpc_exit_flag=0;
-
+    if(!(tmpstr = build_url(endpoint,project))) {
+        ret=-1;
+        goto _return;
+    }
     nc = mg_connect_http(&mgr, do_rpc_ev_handler, tmpstr, NULL, NULL);
     mg_set_protocol_http_websocket(nc);
     fprintf(stderr,"requesting %s\n", tmpstr);
     while (do_rpc_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
     do_rpc_exit_flag=0;
 
+_return:
     mg_mgr_free(&mgr);
-
     if(tmpstr) free(tmpstr);
-//TODO: actually return sth good here
-    return 0; //SUCCESS
+    return ret; //SUCCESS
 }
+
+//------------------------------------------------------------------------------

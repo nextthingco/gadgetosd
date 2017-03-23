@@ -37,7 +37,6 @@ int gadget_start(int argc,char **argv)
     int c, ret=0;
     char   *project_path=NULL;
     gadget_project_t *project=0;
-    char   *tmpstr=0;
 
     while (1)
     {
@@ -112,10 +111,9 @@ int gadget_start(int argc,char **argv)
         goto _return;
     }
     
-    do_rpc(URL_APPLICATION_START,project);
+    do_rpc(ENDPOINT_APPLICATION_START,project);
     
 _return:
-    if(tmpstr) free(tmpstr);
     if(project) gadget_project_destruct(project);
 
     return 0;

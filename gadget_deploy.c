@@ -11,8 +11,9 @@
 #include <getopt.h>
 #include "mongoose.h"
 #include "utils.h"
-#include "gadget_project.h"
 #include "config.h"
+#include "gadget_project.h"
+#include "mongoose_utils.h"
 
 static int verbose;
 
@@ -151,6 +152,7 @@ int gadget_deploy(int argc,char **argv)
     char   *project_path=NULL;
     char   *payload_path=NULL;
     gadget_project_t *project=0;
+    char   *tmpstr=0;
 
     while (1)
     {
@@ -237,23 +239,21 @@ int gadget_deploy(int argc,char **argv)
         goto _return;
     }
 
+    do_rpc(ENDPOINT_VERSION,project);
+
     mg_mgr_init(&mgr, NULL);
 
-    nc = mg_connect_http(&mgr, ev_handler, URL_VERSION, NULL, NULL);
-    mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", URL_VERSION);
-    while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
-    s_exit_flag=0; //needs to be reset here, otherwise the following fails!!
-
     fprintf(stderr,"sending %s...\n",payload_path);
-    nc = mg_postfile_http(&mgr, ev_handler, URL_APPLICATION_ADD, payload_path);
+    tmpstr=build_url(ENDPOINT_APPLICATION_ADD,project);
+    nc = mg_postfile_http(&mgr, ev_handler, tmpstr, payload_path);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", URL_APPLICATION_ADD);
+    fprintf(stderr,"requesting %s\n", tmpstr);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
 
     mg_mgr_free(&mgr);
 
 _return:
+    if(tmpstr) free(tmpstr);
     if(payload_path) free(payload_path);
     if(project) gadget_project_destruct(project);
 

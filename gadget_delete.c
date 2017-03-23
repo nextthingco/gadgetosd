@@ -111,7 +111,7 @@ int gadget_delete(int argc,char **argv)
         goto _return;
     }
     
-    do_rpc(URL_APPLICATION_DELETE,project);
+    do_rpc(ENDPOINT_APPLICATION_DELETE,project);
 
 _return:
     if(project) gadget_project_destruct(project);
