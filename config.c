@@ -22,6 +22,19 @@ char* URL_APPLICATION_STATUS  = 0;
 
 #define FREE(A) if(A) { free(A); A=0; }
 
+int deinitialize()
+{
+    FREE(URL_VERSION);
+    FREE(URL_APPLICATION_ADD);
+    FREE(URL_APPLICATION_STOP);
+    FREE(URL_APPLICATION_START);
+    FREE(URL_APPLICATION_DELETE);
+    FREE(URL_APPLICATION_PURGE);
+    FREE(URL_APPLICATION_STATUS);
+
+    return 0; //SUCCESS
+}
+
 int initialize()
 {
     int ret=0;
@@ -44,17 +57,4 @@ _error:
 
 _return:
     return ret;
-}
-
-int deinitialize()
-{
-    FREE(URL_VERSION);
-    FREE(URL_APPLICATION_ADD);
-    FREE(URL_APPLICATION_STOP);
-    FREE(URL_APPLICATION_START);
-    FREE(URL_APPLICATION_DELETE);
-    FREE(URL_APPLICATION_PURGE);
-    FREE(URL_APPLICATION_STATUS);
-
-    return 0; //SUCCESS
 }
