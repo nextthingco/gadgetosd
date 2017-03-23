@@ -18,21 +18,21 @@
 
 static int verbose;
 
-void gadget_start_help()
+void gadget_purge_help()
 {
     printf(
             "Create embedded Linux apps - easy.\n"
             "\n"
-            "usage: gadget start [<project_path>]\n"
+            "usage: gadget stop [<project_path>]\n"
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
             "  --verbose             be verbose\n"
-            "  <project_path>        start project in path (default: .)\n"
+            "  <project_path>        delete project in path (default: .) from device\n"
           );
 }
 
-int gadget_start(int argc,char **argv)
+int gadget_purge(int argc,char **argv)
 {
     int c, ret=0;
     char   *project_path=NULL;
@@ -69,7 +69,7 @@ int gadget_start(int argc,char **argv)
                 break;
 
             case 'h':
-                gadget_start_help();
+                gadget_purge_help();
                 ret=0;
                 goto _return;
 
@@ -92,7 +92,7 @@ int gadget_start(int argc,char **argv)
     }
 
     if(optind < argc) {
-        fprintf(stderr,"gadget start: ERROR, unknown extra arguments: ");
+        fprintf(stderr,"gadget delete: ERROR, unknown extra arguments: ");
         while (optind < argc)
             fprintf (stderr,"%s ", argv[optind++]);
         putchar ('\n');
@@ -101,18 +101,18 @@ int gadget_start(int argc,char **argv)
     }
 
     if(!xis_dir("%s/.gadget",project_path)) {
-        fprintf(stderr,"gadget start: ERROR: not a gadget project: '%s'\n",project_path);
+        fprintf(stderr,"gadget delete: ERROR: not a gadget project: '%s'\n",project_path);
         ret=1;
         goto _return;
     }
 
     if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        fprintf(stderr,"gadget start: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+        fprintf(stderr,"gadget delete: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
         goto _return;
     }
     
-    do_rpc(ENDPOINT_APPLICATION_START,project);
-    
+    do_rpc(ENDPOINT_APPLICATION_PURGE,project);
+
 _return:
     if(project) gadget_project_destruct(project);
 

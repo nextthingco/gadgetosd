@@ -22,12 +22,9 @@ void handle_application_add(struct mg_connection *nc, int ev, void *p) {
     
   switch (ev) {
     case MG_EV_HTTP_PART_BEGIN: {
-      fprintf(stderr,"MG_EV_HTTP_PART_BEGIN\n");
+      //fprintf(stderr,"MG_EV_HTTP_PART_BEGIN\n");
       if( data == NULL ) {
         data = calloc(1, sizeof(struct file_writer_data));
-        system("docker stop gadget_build_123_c");
-        system("docker rm gadget_build_123_c");
-        system("docker rmi gadget_build_123");
         data->fp = popen("docker load","w");
         data->bytes_written = 0;
 
@@ -59,7 +56,7 @@ void handle_application_add(struct mg_connection *nc, int ev, void *p) {
     }
 
     case MG_EV_HTTP_PART_END: {
-      fprintf(stderr,"MG_EV_HTTP_PART_END\n");
+      //fprintf(stderr,"MG_EV_HTTP_PART_END\n");
 #ifdef _WIN32               // This is terrible
       int ret=0;            // This won't work in production
       pclose(data->fp);     // FIXME
@@ -82,7 +79,6 @@ void handle_application_add(struct mg_connection *nc, int ev, void *p) {
       nc->flags |= MG_F_SEND_AND_CLOSE;
       free(data);
       nc->user_data = NULL;
-      system("docker run --privileged -v /sys:/sys --name gadget_build_123_c gadget_build_123 &");
       break;
     }
     default:

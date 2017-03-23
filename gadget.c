@@ -40,6 +40,7 @@ command commands[] = {
     { "stop",   gadget_stop },
     { "start",  gadget_start },
     { "delete", gadget_delete },
+    { "purge",  gadget_purge },
     { 0, 0 }
 };
 
@@ -64,7 +65,6 @@ int main(int argc, char **argv)
     ret = 1;
 
 _return:
-    deinitialize();
     return ret;
 }
 

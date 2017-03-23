@@ -6,7 +6,7 @@ MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
 ifeq ($(OS),Windows_NT)
 #    CFLAGS += -D _WIN32
-    LIBS += -lws2_32
+    LIBS += -lws2_32 -luuid
     ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
         CFLAGS += -D AMD64
     else
@@ -17,6 +17,7 @@ ifeq ($(OS),Windows_NT)
             CFLAGS += -D IA32
         endif
     endif
+    PATCH=git apply --whitespace=fix patch/unweak_mbuf.patch
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
@@ -47,6 +48,7 @@ gadgetosd_api_application_add.o \
 gadgetosd_api_application_start.o \
 gadgetosd_api_application_stop.o \
 gadgetosd_api_application_delete.o \
+gadgetosd_api_application_purge.o \
 
 
 G_OBJ = utils.o \
@@ -59,6 +61,7 @@ gadget_build.o \
 gadget_stop.o \
 gadget_start.o \
 gadget_delete.o \
+gadget_purge.o \
 gadget_deploy.o \
 
 
@@ -78,6 +81,7 @@ gadget: $(G_OBJ) libmongoose.a libinih.a
 
 libmongoose.a: mongoose.c mongoose.h
 	@echo "  > Building $@"
+	${PATCH}
 	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_FLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
