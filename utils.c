@@ -33,18 +33,15 @@ char* xsstrip(char *s)
 
 char *xuuid_generate()
 {
-#ifndef _WIN32          //PP guards, just temporary to get it to compile
   uuid_t uuid;
-#endif
 
   char *s_uuid=malloc(sizeof(char)*33);
 
-#ifndef _WIN32
   if(!s_uuid) return NULL;
 
   uuid_generate(uuid);
   for(int i=0;i<16;i++) { snprintf(s_uuid+(i*2),3,"%02x",uuid[i]); }
-#endif
+
   return s_uuid;
 }
 
