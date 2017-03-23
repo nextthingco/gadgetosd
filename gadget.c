@@ -25,6 +25,9 @@ extern int gadget_build(int argc, char **argv);
 extern int gadget_deploy(int argc, char **argv);
 extern int gadget_stop(int argc, char **argv);
 extern int gadget_start(int argc, char **argv);
+extern int gadget_delete(int argc, char **argv);
+extern int gadget_purge(int argc, char **argv);
+extern int gadget_status(int argc, char **argv);
 
 command commands[] = {
     { "--help", gadget_help },
@@ -36,6 +39,7 @@ command commands[] = {
     { "deploy", gadget_deploy },
     { "stop",   gadget_stop },
     { "start",  gadget_start },
+    { "delete", gadget_delete },
     { 0, 0 }
 };
 
@@ -75,7 +79,11 @@ int gadget_help(int argc, char **argv)
 "  init        Create an empty gadget project \n"
 "  build       Build the project in the current directory\n"
 "  deploy      Deploys the project in the current directory\n"
+"  start       Starts the application on a device\n"
 "  stop        Stops the application running on a device\n"
+"  delete      Deletes the application instance from a device\n"
+"  purge       Purges the application from a device\n"
+"  status      Shows status information\n"
 "\n"
 "optional arguments:\n"
 "  -h, --help  show this help message and exit\n"

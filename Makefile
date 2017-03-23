@@ -45,7 +45,9 @@ gadgetosd.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
 gadgetosd_api_application_start.o \
-gadgetosd_api_application_stop.o
+gadgetosd_api_application_stop.o \
+gadgetosd_api_application_delete.o \
+
 
 G_OBJ = utils.o \
 config.o \
@@ -56,7 +58,9 @@ gadget_init.o \
 gadget_build.o \
 gadget_stop.o \
 gadget_start.o \
-gadget_deploy.o 
+gadget_delete.o \
+gadget_deploy.o \
+
 
 %.o: %.c
 	@echo "  > Building $@"

@@ -19,6 +19,7 @@ extern void handle_version(struct mg_connection *nc, int ev, void *p);
 extern void handle_application_add(struct mg_connection *nc, int ev, void *p);
 extern void handle_application_stop(struct mg_connection *nc, int ev, void *p);
 extern void handle_application_start(struct mg_connection *nc, int ev, void *p);
+extern void handle_application_delete(struct mg_connection *nc, int ev, void *p);
 
 extern void mg_http_handler(struct mg_connection *nc, int ev, void *ev_data);
 
@@ -55,10 +56,11 @@ int main(int argc, char **argv)
         ret=1; goto _return;
     }
 
-    mg_register_http_endpoint(nc, ENDPOINT_VERSION,           handle_version);
-    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_ADD,   handle_application_add);
-    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_STOP,  handle_application_stop);
-    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_START, handle_application_start);
+    mg_register_http_endpoint(nc, ENDPOINT_VERSION,            handle_version);
+    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_ADD,    handle_application_add);
+    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_STOP,   handle_application_stop);
+    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_START,  handle_application_start);
+    mg_register_http_endpoint(nc, ENDPOINT_APPLICATION_DELETE, handle_application_delete);
     mg_set_protocol_http_websocket(nc);
 
     fprintf(stderr,"gadgetosd running on port %s\n", GADGETOSD_PORT);
