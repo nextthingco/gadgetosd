@@ -17,9 +17,6 @@
 
 static int verbose;
 
-extern char* GADGETOSD_SERVER;
-extern char* GADGETOSD_PORT;
-
 /* RESTful server host and request URI */
 static int s_exit_flag = 0;
     
@@ -56,12 +53,12 @@ void gadget_start_help()
     printf(
             "Create embedded Linux apps - easy.\n"
             "\n"
-            "usage: gadget deploy [<project_path>]\n"
+            "usage: gadget start [<project_path>]\n"
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
             "  --verbose             be verbose\n"
-            "  <project_path>        build project in path (default: .)\n"
+            "  <project_path>        start project in path (default: .)\n"
           );
 }
 
@@ -129,7 +126,7 @@ int gadget_start(int argc,char **argv)
     }
 
     if(optind < argc) {
-        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        fprintf(stderr,"gadget start: ERROR, unknown extra arguments: ");
         while (optind < argc)
             fprintf (stderr,"%s ", argv[optind++]);
         putchar ('\n');
@@ -138,13 +135,13 @@ int gadget_start(int argc,char **argv)
     }
 
     if(!xis_dir("%s/.gadget",project_path)) {
-        fprintf(stderr,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
+        fprintf(stderr,"gadget start: ERROR: not a gadget project: '%s'\n",project_path);
         ret=1;
         goto _return;
     }
 
     if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        fprintf(stderr,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+        fprintf(stderr,"gadget start: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
         goto _return;
     }
     
