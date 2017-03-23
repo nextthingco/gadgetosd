@@ -104,7 +104,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
             path, addr, 2*filesize, boundary,
             (int) auth.len, (auth.buf == NULL ? "" : auth.buf),
             boundary, filename);
-    fputs(header,stderr);
+    //fputs(header,stderr);
     mg_printf(nc,"%s",header);
 
     while(! feof(fp) ) {
@@ -116,7 +116,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
         mg_mgr_poll(mgr, 1);
     }
     mg_printf(nc,"\r\n--%s--\r\n",boundary);
-    fprintf(stderr,"\r\n--%s--\r\n",boundary);
+    //fprintf(stderr,"\r\n--%s--\r\n",boundary);
     ret=nc;
 
 _return:
@@ -243,12 +243,18 @@ int gadget_deploy(int argc,char **argv)
 
     mg_mgr_init(&mgr, NULL);
 
+    do_rpc(ENDPOINT_APPLICATION_STOP,project);
+    do_rpc(ENDPOINT_APPLICATION_DELETE,project);
+    do_rpc(ENDPOINT_APPLICATION_PURGE,project);
+
     fprintf(stderr,"sending %s...\n",payload_path);
     tmpstr=build_url(ENDPOINT_APPLICATION_ADD,project);
     nc = mg_postfile_http(&mgr, ev_handler, tmpstr, payload_path);
     mg_set_protocol_http_websocket(nc);
     fprintf(stderr,"requesting %s\n", tmpstr);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
+
+    do_rpc(ENDPOINT_APPLICATION_START,project);
 
     mg_mgr_free(&mgr);
 
