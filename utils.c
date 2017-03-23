@@ -135,11 +135,8 @@ int xmkpath(char *dir, mode_t mode)
             goto _return;
         }
     }
-#ifdef _WIN32
-    ret = mkdir(dir);
-#else
+
     ret = mkdir(dir, mode);
-#endif
 _return:
     free(basedir);
     return ret;
