@@ -11,7 +11,9 @@
 #include <string.h>
 #include <libgen.h>
 #include <sys/stat.h>
+
 #include "utils.h"
+#include "config.h"
 #include "gadget_project.h"
 
 static int verbose=0;
@@ -130,20 +132,18 @@ int gadget_init(int argc, char **argv)
         goto _return;
     }
 
-    char* template_prefix = "/usr/local/share/gadget/templates/";
-  
     // doesn't copy executable flags... 
     //xcp("/usr/local/share/gadget/templates/alpine/dockerfile",target_dir);
     //xcp("/usr/local/share/gadget/templates/alpine/blink-leds",target_dir);
     //xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
-    if( access( template_prefix, F_OK) == -1 ) {
-        fprintf(stderr, "gadget init: template prefix '%s' doesn't exist.\n", template_prefix);
+    if( access( TEMPLATE_PREFIX, F_OK) == -1 ) {
+        fprintf(stderr, "gadget init: template prefix '%s' doesn't exist.\n", TEMPLATE_PREFIX);
         ret=1;
         goto _return;
     }
     // q'n'd fix:
-    asprintf(&cmd,"cp -va /usr/local/share/gadget/templates/alpine/* %s/",target_dir);
+    asprintf(&cmd,"cp -va %s/alpine/* %s/",TEMPLATE_PREFIX,target_dir);
     FILE* proc = popen(cmd, "r");
     int status = pclose(proc);
     if(status < 0) {

@@ -11,6 +11,7 @@
 #include "config.h"
 #include "version.h"
 #include "mongoose.h"
+#include "utils.h"
 
 typedef int (*funcptr)(int,char **);
 
@@ -49,11 +50,12 @@ int main(int argc, char **argv)
 {
     int i=0,ret=0;
 
+    initialize();
+
     if(argc<2) {
         return gadget_help(argc,argv);
     }
 
-    initialize();
     for(i=0; commands[i].name; i++) {
         if(!strcmp(argv[1],commands[i].name)) {
             ret=commands[i].function(argc-1,&argv[1]);
@@ -65,6 +67,7 @@ int main(int argc, char **argv)
     ret = 1;
 
 _return:
+    deinitialize();
     return ret;
 }
 

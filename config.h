@@ -12,6 +12,10 @@ extern char* ENDPOINT_APPLICATION_DELETE;
 extern char* ENDPOINT_APPLICATION_PURGE;
 extern char* ENDPOINT_APPLICATION_STATUS;
 
+extern char* EXE_PATH;
+extern char* TEMPLATE_PREFIX;
+
 extern int initialize();
+extern void deinitialize();
 
 #endif

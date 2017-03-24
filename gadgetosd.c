@@ -73,5 +73,6 @@ int main(int argc, char **argv)
     mg_mgr_free(&mgr);
 
 _return:
+    deinitialize();
     return ret;
 }
