@@ -114,11 +114,7 @@ int gadget_init(int argc, char **argv)
         goto _return;
     }
 
-#ifdef _WIN32
-    if(mkdir(target_dir)) {
-#else
     if(mkdir(target_dir,0775)) {
-#endif
         fprintf(stderr,"gadget init: ERROR: cannot create target directory '%s'\n",target_dir);
         ret=1;
         goto _return;
