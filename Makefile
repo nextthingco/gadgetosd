@@ -17,6 +17,7 @@ ifeq ($(OS),Windows_NT)
             CFLAGS += -D IA32
         endif
     endif
+    PATCH=git apply --whitespace=fix patch/unweak_mbuf.patch
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
@@ -80,6 +81,7 @@ gadget: $(G_OBJ) libmongoose.a libinih.a
 
 libmongoose.a: mongoose.c mongoose.h
 	@echo "  > Building $@"
+	${PATCH}
 	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_FLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
