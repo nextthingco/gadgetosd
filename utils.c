@@ -352,7 +352,7 @@ int xexec(const char* process, ...) {
         return 1;
     }
     // else we're parent
-    pid_t wait_status = waitpid(pid, &child_status, WNOHANG);
+    pid_t wait_status = waitpid(pid, &child_status, 0);
     if(wait_status == -1) {
         fprintf(stderr, "ERROR\n");
         return 1;
