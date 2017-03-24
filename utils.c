@@ -19,6 +19,44 @@
 #include <sys/wait.h>
 #include <uuid/uuid.h>
 
+#if _WIN32
+#  include <stdlib.h>
+#elif __APPLE__
+#  include <mach-o/dyld.h>
+#  include <sys/syslimits.h>
+#else // asume we are in Linux
+#  include <unistd.h>
+#  include <limits.h>
+#endif
+
+char *get_exe_path()
+{
+    char *exe_path=0;
+#if _WIN32
+    if (_get_pgmptr(&exe_path) != 0) exe_path = 0;
+#elif __APPLE__
+    exe_path=malloc(sizeof(char)*PATH_MAX);
+    uint32_t len = PATH_MAX;
+    if (_NSGetExecutablePath(exe_path, &len) != 0) {
+        exe_path[0] = '\0'; // buffer too small (!)
+    } else {
+        // resolve symlinks, ., .. if possible
+        char *canonicalPath = realpath(exe_path, NULL);
+        if (canonicalPath != NULL) {
+            strncpy(exe_path,canonicalPath,len);
+            free(canonicalPath);
+        }
+    }
+#else // assume we are in linux
+    exe_path=malloc(sizeof(char)*PATH_MAX);
+    ssize_t len = readlink("/proc/self/exe", exe_path,PATH_MAX);
+    if (len == -1 || len == sizeof(exe_path))
+        len = 0;
+    exe_path[len] = '\0';
+#endif
+    return exe_path;
+}
+
 char* xsstrip(char *s)
 {
     int i = strlen(s)-1;

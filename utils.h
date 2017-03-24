@@ -21,6 +21,7 @@
 //strips of trailing white space characters
 extern char* xsstrip(char *s);
 
+extern char *get_exe_path();
 extern char *xuuid_generate();
 extern char* xsprintf(const char *format, ...);
 extern int xmkpath(char *dir, mode_t mode);
