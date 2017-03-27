@@ -1,0 +1,49 @@
+SET( CPACK_GENERATOR              "Bundle" )
+SET( CPACK_BUNDLE_PLIST           "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" )
+SET( CPACK_BUNDLE_NAME            "${PROJECT_NAME}" )
+SET( CPACK_BUNDLE_ICON            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.icns" )
+SET( CPACK_BUNDLE_STARTUP_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/mac_run.sh" )
+
+SET( MACOSX_BUNDLE_EXECUTABLE_NAME      "${CMAPE_BUNDLE_NAME}" )  #CFBundleExecutable         
+SET( MACOSX_BUNDLE_INFO_STRING          "" )  #CFBundleGetInfoString      
+SET( MACOSX_BUNDLE_ICON_FILE            "${CPACK_BUNDLE_NAME}" ) #CFBundleIconFile
+SET( MACOSX_BUNDLE_GUI_IDENTIFIER       "" )  #CFBundleIdentifier         
+SET( MACOSX_BUNDLE_LONG_VERSION_STRING  "" ) 	#CFBundleLongVersionString  
+SET( MACOSX_BUNDLE_BUNDLE_NAME          "${CPACK_BUNDLE_NAME}" )  #CFBundleName               
+SET( MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}" )	#CFBundleShortVersionString 
+SET( MACOSX_BUNDLE_BUNDLE_VERSION       "${PROJECT_VERSION}" )  #CFBundleVersion            
+SET( MACOSX_BUNDLE_COPYRIGHT            "" )  #NSHumanReadableCopyright   
+
+CONFIGURE_FILE( "${CMAKE_SOURCE_DIR}/mac/mac_run.sh.in" 
+                "${CMAKE_CURRENT_BINARY_DIR}/mac_run.sh" @ONLY )
+
+CONFIGURE_FILE( "${CMAKE_ROOT}/Modules/MacOSXBundleInfo.plist.in" 
+                "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" )
+
+FIND_PROGRAM(RSVG_CONVERT NAMES rsvg-convert)
+MARK_AS_ADVANCED(RSVG_CONVERT)
+
+FIND_PROGRAM(ICONUTIL_EXECUTABLE NAMES iconutil)
+MARK_AS_ADVANCED(ICONUTIL_EXECUTABLE)
+
+SET( ICONSET_DIR "icons.iconset" )
+ADD_CUSTOM_TARGET("${ICONSET_DIR}" ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${ICONSET_DIR}")
+
+FOREACH( SIZE "16" "32" "128" "256" "512" )
+  ADD_CUSTOM_COMMAND( OUTPUT "${ICONSET_DIR}/icon_${SIZE}x${SIZE}.png"
+                      COMMAND ${RSVG_CONVERT} -w ${SIZE} -h ${SIZE} ${SVG_ICON_FILE} -o "${ICONSET_DIR}/icon_${SIZE}x${SIZE}.png"
+                      DEPENDS ${SVG_ICON_FILE} "${ICONSET_DIR}"
+                    )
+  ADD_CUSTOM_TARGET(icon_${SIZE}x${SIZE} ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${ICONSET_DIR}/icon_${SIZE}x${SIZE}.png" )
+  LIST(APPEND ICONS icon_${SIZE}x${SIZE} )
+
+  MATH( EXPR DOUBLE_SIZE "${SIZE} * 2" )
+  ADD_CUSTOM_COMMAND( OUTPUT "${ICONSET_DIR}/icon_${SIZE}x${SIZE}@2x.png"
+                      COMMAND ${RSVG_CONVERT} -w ${DOUBLE_SIZE} -h ${DOUBLE_SIZE} ${SVG_ICON_FILE} -o "${ICONSET_DIR}/icon_${SIZE}x${SIZE}@2x.png"
+                      DEPENDS ${SVG_ICON_FILE} "${ICONSET_DIR}"
+                    )
+  ADD_CUSTOM_TARGET("icon_${SIZE}x${SIZE}at2x" ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${ICONSET_DIR}/icon_${SIZE}x${SIZE}@2x.png")
+  LIST(APPEND ICONS icon_${SIZE}x${SIZE}at2x )
+ENDFOREACH()
+
+ADD_CUSTOM_TARGET("icon.icns" ALL COMMAND ${ICONUTIL_EXECUTABLE} -c icns -o ${CPACK_BUNDLE_ICON} "${CMAKE_CURRENT_BINARY_DIR}/icons.iconset" DEPENDS ${ICONS})

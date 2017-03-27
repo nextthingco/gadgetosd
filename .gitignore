@@ -1,0 +1,6 @@
+*.o
+*.a
+gadget
+gadgetosd
+gadget.exe
+gadgetosd.exe

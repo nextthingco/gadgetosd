@@ -1,0 +1,102 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+ 
+PROJECT("Gadget")
+
+SET(CMAKE_INCLUDE_CURRENT_DIR ON)
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+SET( PROJECT_VERSION_MINOR "0" )
+SET( PROJECT_VERSION_MAJOR "0" )
+SET( PROJECT_VERSION_PATCH "0" )
+SET( PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}" )
+
+MESSAGE( "CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}" )
+MESSAGE( "CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}" )
+MESSAGE( "CMAKE_ROOT=${CMAKE_ROOT}" )
+MESSAGE( "CMAKE_SYSTEM=${CMAKE_SYSTEM}" )
+
+IF(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  SET( LIBUUID_LIBRARIES "" )
+ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  FIND_PACKAGE(LibUUID REQUIRED)
+ELSEIF(CMAKE_SYSTEM_NAME MATCHES "MSYS")
+  FIND_PACKAGE(LibUUID REQUIRED)
+ENDIF()
+
+# Required for Mongoose to support file upload
+ADD_DEFINITIONS( -DMG_ENABLE_HTTP_STREAMING_MULTIPART )
+ADD_DEFINITIONS( -std=c11 )
+ADD_DEFINITIONS( -D_GNU_SOURCE )
+
+SET( GOSD_SRCS 
+mongoose.c
+ini.c
+utils.c
+config.c
+mongoose_utils.c 
+gadgetosd.c
+gadgetosd_api_version.c 
+gadgetosd_api_application_add.c
+gadgetosd_api_application_start.c
+gadgetosd_api_application_stop.c
+gadgetosd_api_application_delete.c
+gadgetosd_api_application_purge.c
+gadgetosd_api_application_status.c
+)
+SET( GOSD_EXECUTABLE gadgetosd )
+ADD_EXECUTABLE("${GOSD_EXECUTABLE}" ${GOSD_SRCS} )
+TARGET_LINK_LIBRARIES("${GOSD_EXECUTABLE}" ${LIBUUID_LIBRARIES})
+INSTALL(TARGETS ${GOSD_EXECUTABLE} DESTINATION bin)
+
+SET( GADGET_SRCS 
+mongoose.c
+ini.c
+utils.c 
+config.c 
+mongoose_utils.c 
+gadget_project.c
+gadget.c
+gadget_init.c
+gadget_build.c
+gadget_stop.c
+gadget_start.c
+gadget_delete.c
+gadget_purge.c
+gadget_deploy.c
+gadget_status.c
+)
+SET( GADGET_EXECUTABLE gadget )
+ADD_EXECUTABLE("${GADGET_EXECUTABLE}" ${GADGET_SRCS} )
+TARGET_LINK_LIBRARIES("${GADGET_EXECUTABLE}" ${LIBUUID_LIBRARIES})
+INSTALL(TARGETS ${GADGET_EXECUTABLE} DESTINATION bin)
+
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/gadget_shell.sh
+DESTINATION bin
+PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+)
+
+SET (SVG_ICON_FILE "${CMAKE_SOURCE_DIR}/icon.svg")
+
+## install assets
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/templates/alpine DESTINATION share/gadget/templates/
+USE_SOURCE_PERMISSIONS
+)
+
+
+FILE(DOWNLOAD https://chiptainer_alpine.surge.sh/alpine_armhf_rootfs.tar.gz ${CMAKE_BINARY_DIR}/rootfs.tar.gz SHOW_PROGRESS)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/rootfs.tar.gz
+DESTINATION share/gadget/templates/alpine/
+PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+)
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  SET( CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}" )
+  MESSAGE(STATUS "Running Mac packaging")
+  INCLUDE("mac/packaging.cmake")
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  STRING( TOLOWER "${PROJECT_NAME}" CPACK_PACKAGE_FILE_NAME  )
+  MESSAGE(STATUS "Running Linux packaging")
+  INCLUDE("ubuntu/packaging.cmake")
+ENDIF()
+
+INCLUDE( CPack )
