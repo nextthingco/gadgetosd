@@ -39,3 +39,14 @@ build:
       --rm -v $PWD:/upload -w /upload
       $UPLOAD_CONTAINER ci-s3-upload
       gadget
+
+mac-build:
+  stage: build
+  tags: [alex-mac]
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+    - cpack
+    - ls
