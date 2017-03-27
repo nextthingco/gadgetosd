@@ -1,10 +1,5 @@
 # ex: softtabstop=2 shiftwidth=2 tabstop=2 expandtab
 
-image: docker:latest
-
-services:
-  - docker:dind
-
 variables:
   BUILD_CONTAINER: ${CI_REGISTRY}/nextthingco/gadgetosd:unstable
   UPLOAD_CONTAINER: ${CI_REGISTRY}/nextthingco/ci-tools:unstable
@@ -13,6 +8,11 @@ stages:
   - build
 
 build:
+  image: docker:latest
+
+  services:
+    - docker:dind
+
   stage: build
   script:
     - env
