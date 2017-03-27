@@ -347,6 +347,7 @@ int xrun(const char *cmd, char **output_buf)
     ret=xfrun(cmd,fp);
     fseek(fp,0,SEEK_SET);
     ptr=xfread(fp);
+    fclose(fp);
     *output_buf=ptr;
 
     return ret;
