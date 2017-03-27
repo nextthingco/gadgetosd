@@ -42,6 +42,7 @@ command commands[] = {
     { "start",  gadget_start },
     { "delete", gadget_delete },
     { "purge",  gadget_purge },
+    { "status", gadget_status },
     { 0, 0 }
 };
 

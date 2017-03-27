@@ -49,6 +49,7 @@ gadgetosd_api_application_start.o \
 gadgetosd_api_application_stop.o \
 gadgetosd_api_application_delete.o \
 gadgetosd_api_application_purge.o \
+gadgetosd_api_application_status.o \
 
 
 G_OBJ = utils.o \
@@ -63,6 +64,7 @@ gadget_start.o \
 gadget_delete.o \
 gadget_purge.o \
 gadget_deploy.o \
+gadget_status.o \
 
 
 %.o: %.c

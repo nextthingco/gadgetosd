@@ -41,6 +41,7 @@ gadgetosd_api_application_start.c
 gadgetosd_api_application_stop.c
 gadgetosd_api_application_delete.c
 gadgetosd_api_application_purge.c
+gadgetosd_api_application_status.c
 )
 SET( GOSD_EXECUTABLE gadgetosd )
 ADD_EXECUTABLE("${GOSD_EXECUTABLE}" ${GOSD_SRCS} )
@@ -62,6 +63,7 @@ gadget_start.c
 gadget_delete.c
 gadget_purge.c
 gadget_deploy.c
+gadget_status.c
 )
 SET( GADGET_EXECUTABLE gadget )
 ADD_EXECUTABLE("${GADGET_EXECUTABLE}" ${GADGET_SRCS} )

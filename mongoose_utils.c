@@ -29,16 +29,27 @@ char *build_url( char* endpoint, gadget_project_t *project)
 {
     char *tmpstr=0;
 
-    if( asprintf(&tmpstr,
-                 "http://%s:%s%s?container=%s&image=%s",
-                 GADGETOSD_SERVER,
-                 GADGETOSD_PORT,
-                 endpoint,
-                 project->container_name,
-                 project->container_image_name
-                ) < 0
-      )
-        return 0;
+    if(project) {
+        if( asprintf(&tmpstr,
+                     "http://%s:%s%s?container=%s&image=%s",
+                     GADGETOSD_SERVER,
+                     GADGETOSD_PORT,
+                     endpoint,
+                     project->container_name,
+                     project->container_image_name
+                    ) < 0
+          )
+            return 0;
+    } else {
+        if( asprintf(&tmpstr,
+                     "http://%s:%s%s",
+                     GADGETOSD_SERVER,
+                     GADGETOSD_PORT,
+                     endpoint
+                    ) < 0
+          )
+            return 0;
+    }
 
     return tmpstr;
 }
@@ -99,7 +110,7 @@ int do_rpc(char *endpoint,gadget_project_t *project)
 _return:
     mg_mgr_free(&mgr);
     if(tmpstr) free(tmpstr);
-    return ret; //SUCCESS
+    return ret;
 }
 
 //------------------------------------------------------------------------------

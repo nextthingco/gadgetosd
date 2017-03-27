@@ -1,0 +1,97 @@
+/*
+ * ex: softtabstop=4 shiftwidth=4 tabstop=4 expandtab
+ *
+ * Copyright (c) 2017 Next Thing Co
+ * All rights reserved
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <getopt.h>
+#include "mongoose.h"
+
+#include "config.h"
+#include "utils.h"
+#include "gadget_project.h"
+#include "mongoose_utils.h"
+
+static int verbose;
+
+void gadget_status_help()
+{
+    printf(
+            "Create embedded Linux apps - easy.\n"
+            "\n"
+            "usage: gadget status\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help            show this help message and exit\n"
+            "  --verbose             be verbose\n"
+          );
+}
+
+int gadget_status(int argc,char **argv)
+{
+    int c, ret=0;
+
+    while (1)
+    {
+        static struct option long_options[] =
+        {
+            {"verbose", no_argument,       &verbose, 1},
+            {"help",    no_argument,       0, 'h'},
+            {0, 0, 0, 0}
+        };
+
+        int option_index = 0;
+
+        c = getopt_long (argc, argv, "h",
+                long_options, &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        switch (c)
+        {
+            case 0:
+                /* If this option set a flag, do nothing else now. */
+                if (long_options[option_index].flag != 0)
+                    break;
+                printf("option %s", long_options[option_index].name);
+                if (optarg)
+                    printf (" with arg %s", optarg);
+                printf ("\n");
+                break;
+
+            case 'h':
+                gadget_status_help();
+                ret=0;
+                goto _return;
+
+            case '?':
+                /* getopt_long already printed an error message. */
+                break;
+
+            default:
+                abort ();
+        }
+    }
+
+    if (verbose)
+        puts ("verbose flag is set\n");
+
+    if(optind < argc) {
+        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        while (optind < argc)
+            fprintf (stderr,"%s ", argv[optind++]);
+        putchar ('\n');
+        ret = -1;
+        goto _return;
+    }
+
+    do_rpc(ENDPOINT_APPLICATION_STATUS,0);
+
+_return:
+    return 0;
+}
