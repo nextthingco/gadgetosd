@@ -26,6 +26,7 @@ ENDIF()
 # Required for Mongoose to support file upload
 ADD_DEFINITIONS( -DMG_ENABLE_HTTP_STREAMING_MULTIPART )
 ADD_DEFINITIONS( -std=c11 )
+ADD_DEFINITIONS( -D_GNU_SOURCE )
 
 SET( GOSD_SRCS 
 mongoose.c
