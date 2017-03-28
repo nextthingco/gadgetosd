@@ -23,11 +23,11 @@ build:
   stage: build
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - pushd ubuntu
+    - cd ubuntu
     - docker build --pull -t $CONTAINER_TEST_IMAGE .
     - echo "docker push $CONTAINER_TEST_IMAGE"
     - docker push $CONTAINER_TEST_IMAGE
-    - popd
+    - cd ..
 
 test:
   stage: test
