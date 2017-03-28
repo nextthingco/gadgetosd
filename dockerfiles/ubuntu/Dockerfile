@@ -8,7 +8,11 @@ run apt -y update && \
 	curl \
 	apt-transport-https \
 	software-properties-common \
-	ca-certificates && \
+	ca-certificates \
+	cmake \
+	dh-make \
+	librsvg2-bin \
+	debhelper  && \
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
 	add-apt-repository \
 	"deb [arch=amd64] https://download.docker.com/linux/ubuntu \
