@@ -35,14 +35,7 @@ test:
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     - docker pull $CONTAINER_TEST_IMAGE
-    - git clone -b $TEST_BRANCH --depth 1 $CI_BUILD_REPO $TEST_BRANCH
-    - cd $TEST_BRANCH
-    - docker run --rm
-       -v $PWD:/root
-       -w /root
-       $CONTAINER_TEST_IMAGE
-       make -s
-    - cd ..
+    - docker run --rm -v $PWD:/root -w /root $CONTAINER_TEST_IMAGE ./test.sh
 
 release:
   stage: release
