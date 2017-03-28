@@ -1,33 +1,16 @@
 #!/bin/bash
 
-echo -e "\
-## NOTE: while mongoose / libmongoose can be installed on some systems\n\
-##       via a package manager, this is not really useful for our project.\n\
-##       We need the exact version 6.7 and need it compiled with the flag\n\
-##          -DMG_ENABLE_HTTP_STREAMING_MULTIPART\n\n
-"
+DOCKER_REGISTRY=ntc-registry.githost.io
+DOCKER_IMAGE=ntc-registry.githost.io/nextthingco/gadgetosd:latest
 
-#### so outside buildroot, we do:
-CC=${CC:-gcc}
-AR=${AR:-ar}
-    
-MONGOOSE_URL=https://github.com/cesanta/mongoose/archive/6.7.tar.gz
-MONGOOSE_TAR=${MONGOOSE_URL##*/}
-MONGOOSE_VER=${MONGOOSE_TAR%.tar.gz}
+if [[ -n "$(which docker)" ]]; then
+    echo "docker found: $(which docker)"
+    echo "trying a docker build"
 
-# IN WINDOWS
-# MONGOOSE_FLAGS="-DMG_ENABLE_HTTP_STREAMING_MULTIPART -D _WIN32"
+    if ! docker -D pull $DOCKER_IMAGE; then
+        docker login $DOCKER_REGISTRY
+        docker -D pull $DOCKER_IMAGE || exit
+    fi
 
-MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
-
-echo "Downloading mongoose"
-wget -c $MONGOOSE_URL
-tar xzvf $MONGOOSE_TAR
-
-cp mongoose-$MONGOOSE_VER/mongoose.c .
-cp mongoose-$MONGOOSE_VER/mongoose.h .
-
-${CC} -c mongoose.c ${MONGOOSE_CFLAGS} -o mongoose.o
-${AR} rcs libmongoose.a mongoose.o
-
-make
+    docker run -v $PWD:/work -w /work -e BUILD_DIR=build_docker --rm -it $DOCKER_IMAGE ./build_cmake.sh
+fi

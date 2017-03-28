@@ -1,10 +1,5 @@
 # ex: softtabstop=2 shiftwidth=2 tabstop=2 expandtab
 
-image: docker:latest
-
-services:
-  - docker:dind
-
 variables:
   BUILD_CONTAINER: ${CI_REGISTRY}/nextthingco/gadgetosd:unstable
   UPLOAD_CONTAINER: ${CI_REGISTRY}/nextthingco/ci-tools:unstable
@@ -13,6 +8,11 @@ stages:
   - build
 
 build:
+  image: docker:latest
+
+  services:
+    - docker:dind
+
   stage: build
   script:
     - env
@@ -48,3 +48,15 @@ mac-build:
     - make
     - cpack
     - ls
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
+    - docker pull $UPLOAD_CONTAINER
+    - docker run
+      -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
+      -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
+      -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
+      -e CI_PROJECT_NAME=${CI_PROJECT_NAME}
+      -e CI_BUILD_REF_NAME=${CI_BUILD_REF_SLUG}
+      -e CI_BUILD_ID=${CI_BUILD_ID}
+      --rm -v $PWD:/upload -w /upload
+      $UPLOAD_CONTAINER ci-s3-upload
+      Gadget.dmg
