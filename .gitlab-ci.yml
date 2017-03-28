@@ -21,7 +21,6 @@ before_script:
 
 build:
   stage: build
-  only: docker
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     - pushd ubuntu
@@ -32,7 +31,6 @@ build:
 
 test:
   stage: test
-  only: docker
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     - docker pull $CONTAINER_TEST_IMAGE
@@ -44,7 +42,6 @@ test:
 
 release:
   stage: release
-  only: docker
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     - docker pull $CONTAINER_TEST_IMAGE
