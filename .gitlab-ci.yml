@@ -1,7 +1,7 @@
 # ex: softtabstop=2 shiftwidth=2 tabstop=2 expandtab
 
 variables:
-  BUILD_CONTAINER: ${CI_REGISTRY}/nextthingco/gadgetosd:unstable
+  BUILD_CONTAINER: ${CI_REGISTRY}/nextthingco/gadgetosd:latest
   UPLOAD_CONTAINER: ${CI_REGISTRY}/nextthingco/ci-tools:unstable
 
 stages:
@@ -17,10 +17,6 @@ build:
   script:
     - env
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
-    - docker pull $BUILD_CONTAINER
-    - docker build -t $BUILD_CONTAINER dockerfiles/ubuntu
-    - docker push $BUILD_CONTAINER
-
     - docker run --rm
       -v $PWD:/root
       -w /root
