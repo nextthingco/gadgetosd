@@ -10,7 +10,9 @@ Currently, only Ubuntu 16.04 is officially supported.
 Other systems are untested but might work as well.
 
 Download the latest version here:
+
 [Gadget unstable .deb package](https://opensource.nextthing.co/githost/gadgetosd/unstable/latest/gadget.deb)
+
 [Gadget testing .deb package](https://opensource.nextthing.co/githost/gadgetosd/testing/gadget.deb)
 
 ### Mac OS
@@ -19,7 +21,9 @@ Gadget has been tested on Mac OS 10.12.
 Older versions might work, but are not officially supported.
 
 Download the latest version here:
+
 [Gadget unstable .dmg](https://opensource.nextthing.co/githost/gadgetosd/latest/Gadget.dmg)
+
 [Gadget testing .dmg](https://opensource.nextthing.co/githost/gadgetosd/testing/Gadget.dmg)
 
 ###  Windows
@@ -28,7 +32,9 @@ Gadget is supported on Windows 7 and Windows 10.
 Other versions are untested.
 
 Download the latest version here:
+
 [Gadget unstable installer](https://opensource.nextthing.co/githost/gadgetosd/latest/Gadget-Setup.dmg)
+
 [Gadget testing installer](https://opensource.nextthing.co/githost/gadgetosd/testing/Gadget-Setup.exe)
 
 ## Getting Started
