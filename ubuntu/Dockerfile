@@ -13,6 +13,7 @@ run apt -y update && \
 	cmake \
 	dh-make \
 	librsvg2-bin \
+	lintian \
 	debhelper  && \
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
 	add-apt-repository \
