@@ -1,0 +1,11 @@
+# Docker branch
+
+Contains everything to build the docker container which then builds Linux binaries.
+
+## Continous Integration
+
+The .gitlab-ci.yml contains three build stages. Any change pushed to the docker branch will:
+
+1. build: builds a new Docker image
+2. test:using the new image, try to build the unstable branch
+3. release: if the test stage succeeds, tag the newly build image and push to the docker registry.
