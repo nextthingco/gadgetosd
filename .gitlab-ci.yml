@@ -21,7 +21,7 @@ build:
       -v $PWD:/root
       -w /root
       $BUILD_CONTAINER
-      make -s
+      ./build_cmake.sh
     - docker pull $UPLOAD_CONTAINER
     - docker run
       -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
@@ -32,7 +32,7 @@ build:
       -e CI_BUILD_ID=${CI_PIPELINE_ID}
       --rm -v $PWD:/upload -w /upload
       $UPLOAD_CONTAINER ci-s3-upload
-      gadget
+      build/gadgetos-cli_0.0.0-1_amd64.deb
 
 mac-build:
   stage: build
