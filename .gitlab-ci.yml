@@ -23,7 +23,7 @@ build:
       $BUILD_CONTAINER
       ./build_cmake.sh
     - mkdir build/ubuntu
-    - mv build/*.deb build/ubuntu/*
+    - mv build/*.deb build/ubuntu/
     - cd build
     - docker pull $UPLOAD_CONTAINER
     - docker run
