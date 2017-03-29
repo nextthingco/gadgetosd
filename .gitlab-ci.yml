@@ -22,8 +22,9 @@ build:
       -w /root
       $BUILD_CONTAINER
       ./build_cmake.sh
-      mkdir ubuntu
-      cp build/*.deb ubuntu/*
+    - mkdir build/ubuntu
+    - mv build/*.deb build/ubuntu/*
+    - cd build
     - docker pull $UPLOAD_CONTAINER
     - docker run
       -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
