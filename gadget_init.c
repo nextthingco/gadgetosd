@@ -28,8 +28,8 @@ void gadget_init_help()
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
+            "  -v, --verbose         be verbose\n"
             "  -t TYPE, --type=TYPE  specify project type (default: docker)\n"
-            "  --verbose             be verbose\n"
             "\n"
             "project types:\n"
             "  docker                Docker based project\n"
@@ -46,7 +46,7 @@ int gadget_init(int argc, char **argv)
     {
         static struct option long_options[] =
         {
-            {"verbose", no_argument,       &verbose, 1},
+            {"verbose", no_argument,       0, 'v'},
             {"help",    no_argument,       0, 'h'},
             {"type",    required_argument, 0, 't'},
             {0, 0, 0, 0}
@@ -54,7 +54,7 @@ int gadget_init(int argc, char **argv)
 
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "ht:",
+        c = getopt_long (argc, argv, "ht:v",
                 long_options, &option_index);
 
         /* Detect the end of the options. */
@@ -63,14 +63,8 @@ int gadget_init(int argc, char **argv)
 
         switch (c)
         {
-            case 0:
-                /* If this option set a flag, do nothing else now. */
-                if (long_options[option_index].flag != 0)
-                    break;
-                printf ("option %s", long_options[option_index].name);
-                if (optarg)
-                    printf (" with arg %s", optarg);
-                printf ("\n");
+            case 'v':
+                verbose=1;
                 break;
 
             case 'h':
@@ -83,16 +77,13 @@ int gadget_init(int argc, char **argv)
                 break;
 
             case '?':
-                /* getopt_long already printed an error message. */
+                goto _return;
                 break;
 
             default:
                 abort ();
         }
     }
-
-    if (verbose)
-        puts ("verbose flag is set\n");
 
     if(optind == argc) {
         fprintf(stderr,"gadget init: ERROR: no project name given\n");
