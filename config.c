@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <libgen.h>
@@ -25,7 +26,21 @@ int initialize()
     if(getenv("GADGETOSD_PORT"))   GADGETOSD_PORT   = getenv("GADGETOSD_PORT");
 
     EXE_PATH = get_exe_path();
+
     asprintf(&TEMPLATE_PREFIX,"%s/share/gadget/templates",dirname(dirname(EXE_PATH)));
+    if( access( TEMPLATE_PREFIX, F_OK) == -1 ) {
+        // this is a hack to use templates placed next to the gadget binary
+        // which is useful for development
+        char *original = TEMPLATE_PREFIX;
+        asprintf(&TEMPLATE_PREFIX,"%s/templates",dirname(EXE_PATH));
+
+        if( access( TEMPLATE_PREFIX, F_OK) == -1 ) {
+            fprintf(stderr, "gadget init: template prefix '%s' doesn't exist.\n", original);
+            if(TEMPLATE_PREFIX) free(TEMPLATE_PREFIX);
+            TEMPLATE_PREFIX=original;
+            return -1;
+        }
+    }
 
     return 0;
 }
