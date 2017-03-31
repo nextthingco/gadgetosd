@@ -70,7 +70,12 @@ typedef struct subprocess_t {
     int  max_out;  // maximum size for out and err;
 } subprocess_t;
 
+//non-variadic form:
+EXTERN subprocess_t *subprocess_runv(char *cmd, char **argv);
+//variadic form:
 EXTERN subprocess_t* subprocess_run(char *cmd, ...);
+//run, grab & wait: calls subprocess_runv then subprocess_grab_output
+EXTERN subprocess_t *subprocess_run_gw(char *cmd, ...);
 EXTERN int subprocess_wait(subprocess_t *p);
 EXTERN int subprocess_grab_output(subprocess_t *p);
 EXTERN void subprocess_free(subprocess_t*);

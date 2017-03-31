@@ -471,7 +471,34 @@ int xpclose(const pid_t pid, int *pipes)
 
 subprocess_t *subprocess_run(char *cmd, ...)
 {
+    char **argv;
     va_list varargs;
+
+    va_start(varargs,cmd);
+    argv=vbuild_argv(cmd,varargs);
+    va_end(varargs);
+
+    return subprocess_runv(cmd,argv);
+}
+
+subprocess_t *subprocess_run_gw(char *cmd, ...)
+{
+    va_list varargs;
+    char **argv;
+    subprocess_t *p;
+
+    va_start(varargs,cmd);
+    argv=vbuild_argv(cmd,varargs);
+    va_end(varargs);
+
+    p=subprocess_runv(cmd,argv);
+    subprocess_grab_output(p);
+    
+    return p;
+}
+
+subprocess_t *subprocess_runv(char *cmd, char **argv)
+{
     subprocess_t *r=0;
     int len=0;
     char *p;
@@ -480,9 +507,7 @@ subprocess_t *subprocess_run(char *cmd, ...)
     if(!(r=malloc(sizeof(subprocess_t)))) goto _error;
     memset(r,0,sizeof(subprocess_t));
     r->cmd=strdup(cmd);
-    va_start(varargs,cmd);
-    r->argv=vbuild_argv(r->cmd,varargs);
-    va_end(varargs);
+    r->argv=argv;
     if(!r->argv) goto _error;
 
     for(r->argc=0; r->argv[r->argc]!=0; r->argc++) {
