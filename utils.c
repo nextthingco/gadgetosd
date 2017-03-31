@@ -478,6 +478,7 @@ subprocess_t *subprocess_run(char *cmd, ...)
     int i;
 
     if(!(r=malloc(sizeof(subprocess_t)))) goto _error;
+    memset(r,0,sizeof(subprocess_t));
     r->cmd=strdup(cmd);
     va_start(varargs,cmd);
     r->argv=vbuild_argv(r->cmd,varargs);
