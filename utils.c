@@ -369,16 +369,17 @@ char** vbuild_argv(char *cmd, va_list varargs )
     while(argc < ARG_MAX) {
         argv[argc] = va_arg(varargs, char*);
 
+        //note: the conversion to (int) is necessary
+        //      to enable vbuild_argv(cmd,arg1,arg2,0)
+        //      and not only vbuild_argv(cmd,arg1,arg2,(char*)0).
+        //      seems to be some variadic madness that
+        //      has been observed on mac os using clang
         if((int)argv[argc] == 0) {
             argv[argc] = (char*) 0;
             break;
         }
         argc++;
     }
-
-//    for(int i=0; i<argc; i++) {
-//        xprint(VERBOSE,"argv[%d]=%s\n",i,argv[i]);
-//    }
 
     return argv;
 }
