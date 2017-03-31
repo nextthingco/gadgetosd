@@ -367,7 +367,7 @@ char** vbuild_argv(char *cmd, va_list varargs )
     argv[argc]=strdup(cmd);
     argc++;
 
-    while(true) {
+    while(1) {
         argv=realloc(argv,sizeof(char*)*(argc+1));
 
         char *p = va_arg(varargs, char*);
