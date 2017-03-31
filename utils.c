@@ -538,10 +538,10 @@ int subprocess_grab_output(subprocess_t *p)
     p->err = malloc(sizeof(char)*(p->max_out+1));
 
     i=j=0;
-    while( (!(feof(f) && feof(g))) && (i<p->max_out) && (j<p->max_out) ) {
+    while( !(feof(f) && feof(g)) ) {
         int c;
-        if((c=fgetc(f))!=EOF) { p->out[i++]=c; }
-        if((c=fgetc(g))!=EOF) { p->err[j++]=c; }
+        if((c=fgetc(f))!=EOF) { if(i<p->max_out) p->out[i++]=c; }
+        if((c=fgetc(g))!=EOF) { if(j<p->max_out) p->err[j++]=c; }
     }
     p->out[i]=p->err[j]=0;
     fclose(f);
