@@ -92,8 +92,8 @@ libinih.a: ini.c ini.h
 	${CC} -c ini.c $(CFLAGS) -o ini.o
 	${AR} rcs libinih.a ini.o
 
-test_utils: test_utils.o utils.o libmongoose.a libinih.a
+test_utils: test_utils.o utils.o config.o libmongoose.a libinih.a
 	@echo "  > Building $@"
-	$(CC) -o test_utils test_utils.o utils.o $(CFLAGS) $(LIBS)
+	$(CC) -o test_utils test_utils.o utils.o config.o $(CFLAGS) $(LIBS)
 clean:
 	rm *.o *.a gadget gadgetosd

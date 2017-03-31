@@ -75,8 +75,6 @@ EXTERN int subprocess_wait(subprocess_t *p);
 EXTERN int subprocess_grab_output(subprocess_t *p);
 EXTERN void subprocess_free(subprocess_t*);
 
-EXTERN int xexec(const char* process, ...);
-
 EXTERN int xprint(int TYPE,const char *format, ...);
 
 #endif //_UTILS_H_

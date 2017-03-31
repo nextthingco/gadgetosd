@@ -565,59 +565,6 @@ void subprocess_free(subprocess_t *p) {
     }
 }
 
-
-// TODO: make use of xpopen
-int xexec(const char* process, ...)
-{
-    const int args_max = 64;
-    int child_status = 0;
-    int status;
-    pid_t pid;
-    va_list varargs;
-    char* args[args_max];
-    int args_count = 0;
-
-    memset(args, 0, sizeof(args));
-    va_start(varargs, process);
-    while(args_count < args_max) {
-        args[args_count] = va_arg(varargs, char*);
-
-        if(args[args_count] == (char*) 0)
-            break;
-        args_count++;
-    }
-
-    // fork off executable
-    pid = fork();
-
-    // if we're in child process
-    if(pid == 0) {
-        if(execvp(process, (char**)args)) {
-            fprintf(stderr, "ERROR occurred launching `%s`\n", process);
-        }
-        return 1;
-    }
-    // else an error occurred
-    else if(pid < 0){
-        fprintf(stderr, "ERROR forking process for `%s`\n", process);
-        return 1;
-    }
-    // else we're parent
-    pid_t wait_status = waitpid(pid, &child_status, 0);
-    if(wait_status == -1) {
-        fprintf(stderr, "ERROR\n");
-        return 1;
-    }
-    if(WIFEXITED(child_status)){
-        status = WEXITSTATUS(child_status);
-        if(status){
-            fprintf(stderr, "ERROR from `%s`\n", process);
-            return 1;
-        }
-    }
-    return 0;
-}
-
 int xprint(int type,const char *format, ...)
 {
     int ret=0;
