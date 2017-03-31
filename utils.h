@@ -52,8 +52,29 @@ EXTERN int xfrun(const char *cmd, FILE *out);
 //NOTE: please free() output_buf yourself!
 EXTERN int xrun(const char *cmd, char **output_buf);
 
-EXTERN int xpopen(int *pipes, char *cmd, ...);
+EXTERN int xpopenl(int *pipes, char *cmd, ...);
+EXTERN int xpopen(int *pipes, char *cmd, char **argv);
 EXTERN int xpclose(const pid_t pid, int *pipes);
+
+typedef struct subprocess_t {
+    char *cmd;     // the command
+    char **argv;   // argv, sentinel NULL terminated
+    int  argc;     // number of elements in argv (not counting sentinel)
+    char *cmdline; // elements in argv concatenated
+    int  pipes[3]; // input (0), output (1) and error (2) file descriptors
+    int  pid;      // pid
+    int  status;   // status provided by waitpid()
+    int  exit;     // exit value
+    char *out;     // string containing output to stdout;
+    char *err;     // string containing output to stderr;
+    int  max_out;  // maximum size for out and err;
+} subprocess_t;
+
+EXTERN subprocess_t* subprocess_run(char *cmd, ...);
+EXTERN int subprocess_wait(subprocess_t *p);
+EXTERN int subprocess_grab_output(subprocess_t *p);
+EXTERN void subprocess_free(subprocess_t*);
+
 EXTERN int xexec(const char* process, ...);
 
 EXTERN int xprint(int TYPE,const char *format, ...);

@@ -361,32 +361,40 @@ int xrun(const char *cmd, char **output_buf)
 char** vbuild_argv(char *cmd, va_list varargs )
 {
     int     argc=0;
-    static char *argv[ARG_MAX];
+    char    **argv=0;
 
-    memset(argv, 0, sizeof(argv));
-    argv[0]=cmd;
+    if(!(argv=malloc(sizeof(char*)))) goto _error;
+    argv[argc]=strdup(cmd);
     argc++;
-    while(argc < ARG_MAX) {
-        argv[argc] = va_arg(varargs, char*);
 
+    while(true) {
+        argv=realloc(argv,sizeof(char*)*(argc+1));
+
+        char *p = va_arg(varargs, char*);
         //note: the conversion to (int) is necessary
         //      to enable vbuild_argv(cmd,arg1,arg2,0)
         //      and not only vbuild_argv(cmd,arg1,arg2,(char*)0).
         //      seems to be some variadic madness that
         //      has been observed on mac os using clang
-        if((int)argv[argc] == 0) {
+        if((int)p == 0) {
             argv[argc] = (char*) 0;
             break;
+        } else {
+            argv[argc] = strdup(p);
+            //xprint(VERBOSE,"vbuild_argv(): argv[%d]=%s\n",argc,argv[argc]);
         }
         argc++;
     }
 
     return argv;
+
+_error:
+    xprint(VERBOSE,"ERROR!\n");
+    return 0;
 }
 
-int xpopen(int *pipes, char *cmd, ...)
+int xpopen(int *pipes, char* cmd, char **argv)
 {
-    va_list varargs;
     int     in[2];
     int     out[2];
     int     err[2];
@@ -396,7 +404,6 @@ int xpopen(int *pipes, char *cmd, ...)
     if(pipe(in))  goto error_in;
     if(pipe(out)) goto error_out;
     if(pipe(err)) goto error_err;
-    xprint(VERBOSE,"OK\n");
 
     pid = fork();
     switch (pid) {
@@ -410,11 +417,6 @@ int xpopen(int *pipes, char *cmd, ...)
          dup2(in[0], 0);   // use in[0] as stdin
          dup2(out[1], 1);  // use out[1] as stdout
          dup2(err[1], 2);  // use err[1] as stderr
-
-         char **argv;
-         va_start(varargs, cmd);
-         argv=vbuild_argv(cmd,varargs);
-         va_end(varargs);
 
          execvp(cmd,argv);
 
@@ -443,6 +445,18 @@ error_in:
     return -1;
 }
 
+int xpopenl(int *pipes, char *cmd, ...)
+{
+    va_list varargs;
+    char **argv;
+
+    va_start(varargs, cmd);
+    argv=vbuild_argv(cmd, varargs);
+    va_end(varargs);
+
+    return xpopen(pipes,cmd,argv);
+}
+
 int xpclose(const pid_t pid, int *pipes)
 {
     int s;
@@ -455,8 +469,106 @@ int xpclose(const pid_t pid, int *pipes)
     return s;
 }
 
+subprocess_t *subprocess_run(char *cmd, ...)
+{
+    va_list varargs;
+    subprocess_t *r=0;
+    int len=0;
+    char *p;
+    int i;
 
-int xexec(const char* process, ...) {
+    if(!(r=malloc(sizeof(subprocess_t)))) goto _error;
+    r->cmd=strdup(cmd);
+    va_start(varargs,cmd);
+    r->argv=vbuild_argv(r->cmd,varargs);
+    va_end(varargs);
+    if(!r->argv) goto _error;
+
+    for(r->argc=0; r->argv[r->argc]!=0; r->argc++) {
+        len += strlen(r->argv[r->argc]);
+    }
+
+    if(!(r->cmdline=malloc(sizeof(char)*(len+1+r->argc)))) goto _error;
+    for(i=0, p=r->cmdline; i<r->argc; i++) {
+        if(!(p=stpcpy(p,r->argv[i]))) goto _error;
+        *p=' ';
+        p++;
+    }
+    *(--p)=0;
+
+    r->exit    = -314151;
+    r->status  = -314151;
+    r->max_out = 8196;
+    r->out     = 0;
+    r->err     = 0;
+
+    r->pid = xpopen(r->pipes,r->cmd,r->argv);
+    return r;
+
+_error:
+    if(r) subprocess_free(r);
+    return 0;
+}
+
+int subprocess_wait(subprocess_t *p)
+{
+    if(waitpid(p->pid, &p->status, 0)!=p->pid) {
+        xprint(VERBOSE,"ERROR: waitpid returned negative value\n");
+        return errno;
+    }
+    if(WIFEXITED(p->status)) {
+        p->exit = WEXITSTATUS(p->status);
+    } else {
+        xprint(VERBOSE,"ERROR: child quit abnormally\n");
+    }
+
+    return p->exit;
+}
+
+int subprocess_grab_output(subprocess_t *p)
+{
+    FILE *f=0,*g=0;
+    int  i=0,j=0;
+
+    f = fdopen(p->pipes[1],"r");
+    g = fdopen(p->pipes[2],"r");
+
+    p->out = malloc(sizeof(char)*(p->max_out+1));
+    p->err = malloc(sizeof(char)*(p->max_out+1));
+
+    i=j=0;
+    while( (!(feof(f) && feof(g))) && (i<p->max_out) && (j<p->max_out) ) {
+        int c;
+        if((c=fgetc(f))!=EOF) { p->out[i++]=c; }
+        if((c=fgetc(g))!=EOF) { p->err[j++]=c; }
+    }
+    p->out[i]=p->err[j]=0;
+    fclose(f);
+    fclose(g);
+
+    subprocess_wait(p);
+
+    return p->exit;
+}
+
+void subprocess_free(subprocess_t *p) {
+    if(p) {
+        if(p->cmd) free(p->cmd);
+        if(p->argv) {
+            for(int i=0; i<p->argc; i++) {
+                if(p->argv[i]) free(p->argv[i]);
+            }
+        }
+        if(p->cmdline) free(p->cmdline);
+        if(p->out) free(p->out);
+        if(p->err) free(p->err);
+    }
+}
+
+
+// TODO: make use of xpopen
+int xexec(const char* process, ...)
+{
     const int args_max = 64;
     int child_status = 0;
     int status;

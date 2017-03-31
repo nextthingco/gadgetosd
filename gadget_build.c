@@ -36,10 +36,10 @@ void gadget_build_help()
 int gadget_build(int argc, char **argv)
 {
     int c,ret=0;
-    char *project_path=0,*project_filename=".gadget/config",*cmd=0,*cmd_output=0,*container_name=0;
+    char *project_path=0,*project_filename=".gadget/config",*container_name=0,*container_filename=0;
     char pwd[PATH_MAX]; //previous working dir
-    char *export_cmd=NULL;
     gadget_project_t *project=0;
+    subprocess_t *p=0;
 
     while (1)
     {
@@ -121,46 +121,30 @@ int gadget_build(int argc, char **argv)
 
     asprintf(&container_name,"%s_%s",project->name,project->id);
 
-    // that's how it should be (to be implemented soon):
-    //p=xrun_w("docker","build","-t",container_name,".",0);
-    //if(p.exit) {
-    //    xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed: %s\n%s\n", p.cmd_line, p.out, p.err);
-    //}
+    p=subprocess_run("docker","build","-t",container_name,".",0);
+    subprocess_grab_output(p);
+    if(p->exit) {
+        xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed:\n\n",p->cmdline);
+    }
+    xprint(VERBOSE,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+    goto _return;
+    if(p->exit) goto _return;
+    subprocess_free(p); p=0;
 
-    int pipes[3]; int status; int pid;
-    pid=xpopen(pipes,"docker", "build", "-t",container_name,".",0);
-    if(pid<0) {
-        xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed.\n");
+    asprintf(&container_filename,"%s.tar",container_name);
+    p=subprocess_run("docker","save",container_name,"-o",container_filename,0);
+    subprocess_grab_output(p);
+    if(p->exit) {
+        xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed:\n\n",p->cmdline);
     }
-    waitpid(pid,&status,0);
-    if(WIFEXITED(status)) {
-        status = WEXITSTATUS(status);
-        if(status) {
-            xprint(ERROR,"gadget build: ERROR: calling 'docker' failed:\n");
-            FILE *f; int k;
-            f = fdopen(pipes[1],"r"); while((k=fgetc(f))!=EOF) putchar(k); fclose(f);
-            f = fdopen(pipes[2],"r"); while((k=fgetc(f))!=EOF) putchar(k); fclose(f);
-        }
-    } else {
-        xprint(VERBOSE,"ERROR: child quit abnormally\n");
-    }
-    if(pid<0 || status) goto _return;
-
-    asprintf(&cmd,"docker save %s -o %s.tar",container_name,container_name);
-    if(xrun(cmd,&cmd_output)) {
-        xprint(ERROR,"gadget build: ERROR: calling '%s' failed:\n%s",cmd,cmd_output);
-        ret=errno;
-        goto _return;
-    }
-    xprint(VERBOSE,cmd_output);
-    if(cmd_output) { free(cmd_output); cmd_output=0; }
-    if(cmd) { free(cmd); cmd=0; }
+    xprint(VERBOSE,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+    if(p->exit) goto _return;
+    subprocess_free(p); p=0;
 
 _return:
-    if(export_cmd) free(export_cmd);
-    if(cmd) free(cmd);
-    if(cmd_output) free(cmd_output);
-    if(container_name) free(container_name);
+    if(p)                  subprocess_free(p);
+    if(container_name)     free(container_name);
+    if(container_filename) free(container_filename);
 
     if(chdir(pwd)) {
         xprint(ERROR,"gadget build: ERROR: cannot return to previous directory '%s'\n",pwd);
