@@ -17,6 +17,10 @@
 #include <sys/wait.h>
 #include <uuid/uuid.h>
 
+#define _UTILS_C
+#include "utils.h"
+#include "config.h"
+
 #if _WIN32
 #  include <stdlib.h>
 #elif __APPLE__
@@ -218,12 +222,12 @@ int xfcp(FILE *src, FILE *dst)
     return w;
 }
 
-int xcp(char *source,char *destination) {
+int xcp(const char *source,const char *destination) {
     FILE *src=0,*dst=0;
     int ret=0;
     char path_sep='/';
     char *p=0,*q=0;
-    int p_size=0; 
+    int p_size=0;
 
     if( !(src = fopen(source,"r")) ) {
         fprintf(stderr,"ERROR: cannot open '%s'\n",source);
@@ -231,7 +235,7 @@ int xcp(char *source,char *destination) {
         goto _return;
     }
 
-    if( xis_dir( destination ) ) 
+    if( xis_dir( destination ) )
     {
         q=strrchr(source,path_sep)+1;
         p_size= strlen(destination)+strlen(q)+2;
@@ -290,7 +294,7 @@ char *xfread(FILE* in)
         if(read<0) {
             fprintf(stderr,"ERROR: while reading\n");
         }
-        ptr+=read;        
+        ptr+=read;
     }
     buf[size]=0;
 
@@ -322,10 +326,10 @@ int xfrun(const char *cmd, FILE *out)
     if(!out) return 1;
     in = popen(cmd, "r");
     if (in == NULL) goto _return;
-    
+
     if((ret=xfcp(in,out))<0) {
         pclose(in);
-        return ret; 
+        return ret;
     }
 
 _return:
@@ -341,7 +345,7 @@ int xrun(const char *cmd, char **output_buf)
 
     if(!(fp=tmpfile())) {
         fprintf(stderr,"ERROR: cannot create temp file.");
-        return -1; 
+        return -1;
     }
 
     ret=xfrun(cmd,fp);
@@ -353,8 +357,105 @@ int xrun(const char *cmd, char **output_buf)
     return ret;
 }
 
+// helper function
+char** vbuild_argv(char *cmd, va_list varargs )
+{
+    int     argc=0;
+    static char *argv[ARG_MAX];
+
+    memset(argv, 0, sizeof(argv));
+    argv[0]=cmd;
+    argc++;
+    while(argc < ARG_MAX) {
+        argv[argc] = va_arg(varargs, char*);
+
+        if((int)argv[argc] == 0) {
+            argv[argc] = (char*) 0;
+            break;
+        }
+        argc++;
+    }
+
+//    for(int i=0; i<argc; i++) {
+//        xprint(VERBOSE,"argv[%d]=%s\n",i,argv[i]);
+//    }
+
+    return argv;
+}
+
+int xpopen(int *pipes, char *cmd, ...)
+{
+    va_list varargs;
+    int     in[2];
+    int     out[2];
+    int     err[2];
+    pid_t   pid;
+
+    // create pipes
+    if(pipe(in))  goto error_in;
+    if(pipe(out)) goto error_out;
+    if(pipe(err)) goto error_err;
+    xprint(VERBOSE,"OK\n");
+
+    pid = fork();
+    switch (pid) {
+     case -1: // error
+         goto error_fork;
+     case 0: // child process
+         close(in[1]);
+         close(out[0]);
+         close(err[0]);
+
+         dup2(in[0], 0);   // use in[0] as stdin
+         dup2(out[1], 1);  // use out[1] as stdout
+         dup2(err[1], 2);  // use err[1] as stderr
+
+         char **argv;
+         va_start(varargs, cmd);
+         argv=vbuild_argv(cmd,varargs);
+         va_end(varargs);
+
+         execvp(cmd,argv);
+
+         return -1;        // shall never be executed
+     default: // parent process
+         close(in[0]);  // not used in parent
+         close(out[1]); // not used in parent
+         close(err[1]); // not used in parent
+
+         pipes[0] = in[1];  // write to child stdin
+         pipes[1] = out[0]; // read child stdout
+         pipes[2] = err[0]; // read child stderr
+         return pid;
+    }
+
+error_fork:
+    close(err[0]);
+    close(err[1]);
+error_err:
+    close(out[0]);
+    close(out[1]);
+error_out:
+    close(in[0]);
+    close(in[1]);
+error_in:
+    return -1;
+}
+
+int xpclose(const pid_t pid, int *pipes)
+{
+    int s;
+
+    waitpid(pid, &s, 0);
+    close(pipes[0]);
+    close(pipes[1]);
+    close(pipes[2]);
+
+    return s;
+}
+
+
 int xexec(const char* process, ...) {
-    //int ret = 0;
     const int args_max = 64;
     int child_status = 0;
     int status;
@@ -402,4 +503,18 @@ int xexec(const char* process, ...) {
         }
     }
     return 0;
+}
+
+int xprint(int type,const char *format, ...)
+{
+    int ret=0;
+    va_list args;
+
+    if( type!=VERBOSE || _VERBOSE==1) {
+        va_start(args, format);
+        ret=vfprintf(stderr, format, args);
+        va_end(args);
+    }
+
+    return ret;
 }

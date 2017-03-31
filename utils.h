@@ -18,30 +18,44 @@
 #elif defined(_WIN32)
 #endif
 
-//strips of trailing white space characters
-extern char* xsstrip(char *s);
+#if defined(_UTILS_C)
+#define EXTERN
+#else
+#define EXTERN extern
+#endif
 
-extern char *get_exe_path();
-extern char *xuuid_generate();
-extern char* xsprintf(const char *format, ...);
-extern int xmkpath(char *dir, mode_t mode);
-extern int xmkdir(mode_t mode, const char *format, ...);
-extern int xis_file(const char *format, ...);
-extern int xis_dir(const char *format, ...);
-extern int xfcp(FILE *src, FILE *dst);
-extern int xcp(const char *source, const char *destination);
-extern long xfsize(FILE *fp);
-extern char *xfread(FILE* in);
-extern char *xreadfile( const char *path );
+#define ERROR   0
+#define NORMAL  1
+#define VERBOSE 2
+
+//strips of trailing white space characters
+EXTERN char* xsstrip(char *s);
+
+EXTERN char *get_exe_path();
+EXTERN char *xuuid_generate();
+EXTERN char* xsprintf(const char *format, ...);
+EXTERN int xmkpath(char *dir, mode_t mode);
+EXTERN int xmkdir(mode_t mode, const char *format, ...);
+EXTERN int xis_file(const char *format, ...);
+EXTERN int xis_dir(const char *format, ...);
+EXTERN int xfcp(FILE *src, FILE *dst);
+EXTERN int xcp(const char *source, const char *destination);
+EXTERN long xfsize(FILE *fp);
+EXTERN char *xfread(FILE* in);
+EXTERN char *xreadfile( const char *path );
 
 //runs command and captures output in FILE *out
 //NOTE: out has to be initialized accordingingly
-extern int xfrun(const char *cmd, FILE *out);
+EXTERN int xfrun(const char *cmd, FILE *out);
 
 //runs command and captures output in output_buf
 //NOTE: please free() output_buf yourself!
-extern int xrun(const char *cmd, char **output_buf);
+EXTERN int xrun(const char *cmd, char **output_buf);
 
-extern int xexec(const char* process, ...);
+EXTERN int xpopen(int *pipes, char *cmd, ...);
+EXTERN int xpclose(const pid_t pid, int *pipes);
+EXTERN int xexec(const char* process, ...);
+
+EXTERN int xprint(int TYPE,const char *format, ...);
 
 #endif //_UTILS_H_
