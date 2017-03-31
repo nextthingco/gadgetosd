@@ -8,18 +8,15 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "mongoose.h"
 
 #include "config.h"
 #include "utils.h"
 #include "gadget_project.h"
 #include "mongoose_utils.h"
 
-static int verbose;
-
 void gadget_stop_help()
 {
-    printf(
+    xprint( NORMAL,
             "Create embedded Linux apps - easy.\n"
             "\n"
             "usage: gadget stop [<project_path>]\n"
@@ -58,7 +55,7 @@ int gadget_stop(int argc,char **argv)
         switch (c)
         {
             case 'v':
-                verbose=1;
+                _VERBOSE=1;
                 break;
 
             case 'h':
@@ -75,9 +72,6 @@ int gadget_stop(int argc,char **argv)
         }
     }
 
-    if (verbose)
-        puts ("verbose flag is set\n");
-
     if(optind == argc) {
         project_path=".";
     } else {
@@ -85,22 +79,22 @@ int gadget_stop(int argc,char **argv)
     }
 
     if(optind < argc) {
-        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        xprint(ERROR,"gadget build: ERROR, unknown extra arguments: ");
         while (optind < argc)
-            fprintf (stderr,"%s ", argv[optind++]);
+            xprint(ERROR, "%s ", argv[optind++]);
         putchar ('\n');
         ret = -1;
         goto _return;
     }
 
     if(!xis_dir("%s/.gadget",project_path)) {
-        fprintf(stderr,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
+        xprint(ERROR,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
         ret=1;
         goto _return;
     }
 
     if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        fprintf(stderr,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+        xprint(ERROR,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
         goto _return;
     }
     

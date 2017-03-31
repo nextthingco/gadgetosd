@@ -14,8 +14,6 @@
 #include "gadget_project.h"
 #include "mongoose_utils.h"
 
-static int verbose;
-
 /* RESTful server host and request URI */
 static int s_exit_flag = 0;
 
@@ -26,31 +24,31 @@ extern struct mg_connection *mg_connect_http_base(
 
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
-  struct http_message *hm = (struct http_message *) ev_data;
-  int connect_status;
+    struct http_message *hm = (struct http_message *) ev_data;
+    int connect_status;
 
-  switch (ev) {
-    case MG_EV_CONNECT:
-      connect_status = *(int *) ev_data;
-      if (connect_status != 0) {
-        printf("Error connecting %s\n", strerror(connect_status));
-        s_exit_flag = 1;
-      }
-      break;
-    case MG_EV_HTTP_REPLY:
-      printf("Got reply:\n%.*s\n", (int) hm->body.len, hm->body.p);
-      nc->flags |= MG_F_SEND_AND_CLOSE;
-      s_exit_flag = 1;
-      break;
-    case MG_EV_CLOSE:
-      if (s_exit_flag == 0) {
-        printf("Server closed connection\n");
-        s_exit_flag = 1;
-      };
-      break;
-    default:
-      break;
-  }
+    switch (ev) {
+        case MG_EV_CONNECT:
+            connect_status = *(int *) ev_data;
+            if (connect_status != 0) {
+                xprint(ERROR,"Error connecting %s\n", strerror(connect_status));
+                s_exit_flag = 1;
+            }
+            break;
+        case MG_EV_HTTP_REPLY:
+            xprint(NORMAL,"Got reply:\n%.*s\n", (int) hm->body.len, hm->body.p);
+            nc->flags |= MG_F_SEND_AND_CLOSE;
+            s_exit_flag = 1;
+            break;
+        case MG_EV_CLOSE:
+            if (s_exit_flag == 0) {
+                xprint(NORMAL,"Server closed connection\n");
+                s_exit_flag = 1;
+            };
+            break;
+        default:
+            break;
+    }
 }
 
 
@@ -109,7 +107,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
     while(! feof(fp) ) {
         read=fread(buf,sizeof(char),buf_len,fp);
         if(read<0) {
-            fprintf(stderr,"ERROR: while reading file");
+            xprint(ERROR,"ERROR: while reading file");
         }
         mg_send(nc,buf,read);
         mg_mgr_poll(mgr, 1);
@@ -131,7 +129,7 @@ _return:
 
 void gadget_deploy_help()
 {
-    printf(
+    xprint( NORMAL,
             "Create embedded Linux apps - easy.\n"
             "\n"
             "usage: gadget deploy [<project_path>]\n"
@@ -174,7 +172,7 @@ int gadget_deploy(int argc,char **argv)
         switch (c)
         {
             case 'v':
-                verbose=1;
+                _VERBOSE=1;
                 break;
 
             case 'h':
@@ -191,9 +189,6 @@ int gadget_deploy(int argc,char **argv)
         }
     }
 
-    if (verbose)
-        puts ("verbose flag is set\n");
-
     if(optind == argc) {
         project_path=".";
     } else {
@@ -201,33 +196,33 @@ int gadget_deploy(int argc,char **argv)
     }
 
     if(optind < argc) {
-        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        xprint(ERROR,"gadget build: ERROR, unknown extra arguments: ");
         while (optind < argc)
-            fprintf (stderr,"%s ", argv[optind++]);
+            xprint(ERROR, "%s ", argv[optind++]);
         putchar ('\n');
         ret = -1;
         goto _return;
     }
 
     if(!xis_dir("%s/.gadget",project_path)) {
-        fprintf(stderr,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
+        xprint(ERROR,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
         ret=1;
         goto _return;
     }
 
     if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        fprintf(stderr,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+        xprint(ERROR,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
         goto _return;
     }
 
     if(asprintf(&payload_path,"%s/%s_%s.tar",project_path,project->name,project->id)<0)
     {
-        fprintf(stderr,"gadget build: ERROR: asprintf returned negative value\n");
+        xprint(ERROR,"gadget build: ERROR: asprintf returned negative value\n");
         goto _return;
     }
 
     if(!xis_file(payload_path)) {
-        fprintf(stderr,"gadget build: ERROR: cannot read: '%s'\n",payload_path);
+        xprint(ERROR,"gadget build: ERROR: cannot read: '%s'\n",payload_path);
         ret=1;
         goto _return;
     }
@@ -240,11 +235,11 @@ int gadget_deploy(int argc,char **argv)
     do_rpc(ENDPOINT_APPLICATION_DELETE,project);
     do_rpc(ENDPOINT_APPLICATION_PURGE,project);
 
-    fprintf(stderr,"sending %s...\n",payload_path);
+    xprint(NORMAL,"sending %s...\n",payload_path);
     tmpstr=build_url(ENDPOINT_APPLICATION_ADD,project);
     nc = mg_postfile_http(&mgr, ev_handler, tmpstr, payload_path);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", tmpstr);
+    xprint(NORMAL,"requesting %s\n", tmpstr);
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
 
     do_rpc(ENDPOINT_APPLICATION_START,project);

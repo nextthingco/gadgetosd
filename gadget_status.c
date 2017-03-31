@@ -8,18 +8,15 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "mongoose.h"
 
 #include "config.h"
 #include "utils.h"
 #include "gadget_project.h"
 #include "mongoose_utils.h"
 
-static int verbose;
-
 void gadget_status_help()
 {
-    printf(
+    xprint( NORMAL,
             "Create embedded Linux apps - easy.\n"
             "\n"
             "usage: gadget status\n"
@@ -55,7 +52,7 @@ int gadget_status(int argc,char **argv)
         switch (c)
         {
             case 'v':
-                verbose=1;
+                _VERBOSE=1;
                 break;
 
             case 'h':
@@ -72,13 +69,10 @@ int gadget_status(int argc,char **argv)
         }
     }
 
-    if (verbose)
-        puts ("verbose flag is set\n");
-
     if(optind < argc) {
-        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        xprint(ERROR,"gadget build: ERROR, unknown extra arguments: ");
         while (optind < argc)
-            fprintf (stderr,"%s ", argv[optind++]);
+            xprint(ERROR, "%s ", argv[optind++]);
         putchar ('\n');
         ret = -1;
         goto _return;
