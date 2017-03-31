@@ -121,24 +121,23 @@ int gadget_build(int argc, char **argv)
 
     asprintf(&container_name,"%s_%s",project->name,project->id);
 
-    p=subprocess_run("docker","build","-t",container_name,".",0);
-    subprocess_grab_output(p);
+    p=subprocess_run_gw("docker","build","-t",container_name,".",0);
     if(p->exit) {
         xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed:\n\n",p->cmdline);
+        xprint(ERROR,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+        goto _return;
     }
     xprint(VERBOSE,"%s\n%s%s\n", p->cmdline, p->out, p->err);
-    goto _return;
-    if(p->exit) goto _return;
     subprocess_free(p); p=0;
 
     asprintf(&container_filename,"%s.tar",container_name);
-    p=subprocess_run("docker","save",container_name,"-o",container_filename,0);
-    subprocess_grab_output(p);
+    p=subprocess_run_gw("docker","save",container_name,"-o",container_filename,0);
     if(p->exit) {
         xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed:\n\n",p->cmdline);
+        xprint(ERROR,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+        goto _return;
     }
     xprint(VERBOSE,"%s\n%s%s\n", p->cmdline, p->out, p->err);
-    if(p->exit) goto _return;
     subprocess_free(p); p=0;
 
 _return:
