@@ -36,7 +36,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
             }
             break;
         case MG_EV_HTTP_REPLY:
-            xprint(NORMAL,"Got reply:\n%.*s\n", (int) hm->body.len, hm->body.p);
+            xprint(VERBOSE,"Got reply:\n%.*s\n", (int) hm->body.len, hm->body.p);
             nc->flags |= MG_F_SEND_AND_CLOSE;
             s_exit_flag = 1;
             break;
@@ -227,22 +227,22 @@ int gadget_deploy(int argc,char **argv)
         goto _return;
     }
 
-    do_rpc(ENDPOINT_VERSION,project);
+    xprint(NORMAL,"deploying %s...", project->name);
+    do_rpc(ENDPOINT_VERSION,project);            xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_STOP,project);   xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_DELETE,project); xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_PURGE,project);  xprint(NORMAL,".");
 
     mg_mgr_init(&mgr, NULL);
-
-    do_rpc(ENDPOINT_APPLICATION_STOP,project);
-    do_rpc(ENDPOINT_APPLICATION_DELETE,project);
-    do_rpc(ENDPOINT_APPLICATION_PURGE,project);
-
-    xprint(NORMAL,"sending %s...\n",payload_path);
+    xprint(VERBOSE,"sending %s...\n",payload_path);
     tmpstr=build_url(ENDPOINT_APPLICATION_ADD,project);
     nc = mg_postfile_http(&mgr, ev_handler, tmpstr, payload_path);
     mg_set_protocol_http_websocket(nc);
-    xprint(NORMAL,"requesting %s\n", tmpstr);
-    while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
+    xprint(VERBOSE,"requesting %s\n", tmpstr);
+    while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); xprint(NORMAL,".", project->name); }
 
-    do_rpc(ENDPOINT_APPLICATION_START,project);
+    do_rpc(ENDPOINT_APPLICATION_CREATE,project); xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_START,project);  xprint(NORMAL,"done!");
 
     mg_mgr_free(&mgr);
 

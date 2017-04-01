@@ -18,7 +18,7 @@ void handle_application_start(struct mg_connection *nc, int ev, void *p)
             r=mgu_get_var(nc,p,"image", container_image_name, sizeof(container_image_name));
             if(r<0) break;
 
-            snprintf(cmd,sizeof(cmd),"docker run --privileged -v /sys:/sys --name %s %s&",container_name,container_image_name);
+            snprintf(cmd,sizeof(cmd),"docker start %s",container_name);
             fprintf(stderr,"running '%s'\n",cmd);
             if(system(cmd)) {
                 mg_printf(nc,

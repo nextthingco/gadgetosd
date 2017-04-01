@@ -37,6 +37,7 @@ mongoose_utils.c
 gadgetosd.c
 gadgetosd_api_version.c 
 gadgetosd_api_application_add.c
+gadgetosd_api_application_create.c
 gadgetosd_api_application_start.c
 gadgetosd_api_application_stop.c
 gadgetosd_api_application_delete.c

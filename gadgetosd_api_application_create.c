@@ -2,20 +2,23 @@
 #include "mongoose.h"
 #include "mongoose_utils.h"
 
-void handle_application_delete(struct mg_connection *nc, int ev, void *p)
+void handle_application_create(struct mg_connection *nc, int ev, void *p)
 {
     char container_name[4096];
+    char container_image_name[4096];
     char cmd[4096];
     int r=0;
 
-    fprintf(stderr,"handle_delete()\n");
+    fprintf(stderr,"handle_create()\n");
 
     switch (ev) {
         case MG_EV_HTTP_REQUEST: {
             r=mgu_get_var(nc,p,"container",container_name, sizeof(container_name));
             if(r<0) break;
+            r=mgu_get_var(nc,p,"image", container_image_name, sizeof(container_image_name));
+            if(r<0) break;
 
-            snprintf(cmd,sizeof(cmd),"docker rm %s",container_name);
+            snprintf(cmd,sizeof(cmd),"docker create --privileged -v /sys:/sys --name %s %s",container_name,container_image_name);
             fprintf(stderr,"running '%s'\n",cmd);
             if(system(cmd)) {
                 mg_printf(nc,

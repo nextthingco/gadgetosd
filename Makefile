@@ -45,6 +45,7 @@ mongoose_utils.o \
 gadgetosd.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
+gadgetosd_api_application_create.o \
 gadgetosd_api_application_start.o \
 gadgetosd_api_application_stop.o \
 gadgetosd_api_application_delete.o \
