@@ -8,10 +8,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "mongoose.h"
 #include "utils.h"
 #include "config.h"
 #include "gadget_project.h"
+#include "mongoose.h"
 #include "mongoose_utils.h"
 
 static int verbose;
@@ -24,6 +24,35 @@ extern struct mg_connection *mg_connect_http_base(
     struct mg_connect_opts opts, const char *schema, const char *schema_ssl,
     const char *url, const char **path, char **user, char **pass, char **addr);
 
+//-- BEGIN: work around weak declaratioon problem on windows
+// we redfine mbuf_init(), mbuf_resize() and mbuf_free() here
+void mbuf_init(struct mbuf *mbuf, size_t initial_size) {
+  mbuf->len = mbuf->size = 0;
+  mbuf->buf = NULL;
+  mbuf_resize(mbuf, initial_size);
+}
+
+void mbuf_free(struct mbuf *mbuf) {
+  if (mbuf->buf != NULL) {
+    free(mbuf->buf);
+    mbuf_init(mbuf, 0);
+  }
+}
+
+void mbuf_resize(struct mbuf *a, size_t new_size) {
+  if (new_size > a->size || (new_size < a->size && new_size >= a->len)) {
+    char *buf = (char *) realloc(a->buf, new_size);
+    /*
+     * In case realloc fails, there's not much we can do, except keep things as
+     * they are. Note that NULL is a valid return value from realloc when
+     * size == 0, but that is covered too.
+     */
+    if (buf == NULL && new_size != 0) return;
+    a->buf = buf;
+    a->size = new_size;
+  }
+}
+//-- END: work around weak declaratioon problem on windows
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
   struct http_message *hm = (struct http_message *) ev_data;
