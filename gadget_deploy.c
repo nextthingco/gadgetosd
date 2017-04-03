@@ -153,7 +153,7 @@ _return:
     if(pass) free(pass);
     if(addr) free(addr);
     if(header) free(header);
-    return nc;
+    return ret;
 }
 
 void gadget_deploy_help()
@@ -280,5 +280,5 @@ _return:
     if(payload_path) free(payload_path);
     if(project) gadget_project_destruct(project);
 
-    return 0;
+    return ret;
 }

@@ -103,5 +103,5 @@ int gadget_stop(int argc,char **argv)
 _return:
     if(project) gadget_project_destruct(project);
 
-    return 0;
+    return ret;
 }

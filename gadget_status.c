@@ -81,5 +81,5 @@ int gadget_status(int argc,char **argv)
     do_rpc(ENDPOINT_APPLICATION_STATUS,0);
 
 _return:
-    return 0;
+    return ret;
 }

@@ -170,5 +170,5 @@ _return:
     if(project) gadget_project_destruct(project);
     if(project_name) free(project_name);
 
-    return 0;
+    return ret;
 }
