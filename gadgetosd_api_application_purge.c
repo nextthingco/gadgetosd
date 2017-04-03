@@ -15,7 +15,7 @@ void handle_application_purge(struct mg_connection *nc, int ev, void *p)
             r=mgu_get_var(nc,p,"image",container_image_name, sizeof(container_image_name));
             if(r<0) break;
 
-            snprintf(cmd,sizeof(cmd),"docker rmi %s&",container_image_name);
+            snprintf(cmd,sizeof(cmd),"docker rmi %s",container_image_name);
             fprintf(stderr,"running '%s'\n",cmd);
             if(system(cmd)) {
                 mg_printf(nc,

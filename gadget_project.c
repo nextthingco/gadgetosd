@@ -9,8 +9,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+
 #include "gadget_project.h"
 #include "utils.h"
+#include "config.h"
 #include "ini.h"
 
 
@@ -126,15 +128,15 @@ gadget_project_t* gadget_project_deserialize( char* filenameformat, ... )
     va_end(args);
 
     if(ini_parse(filename, gadget_project_ini_handler, p) < 0) {
-        fprintf(stderr,"gadget_project_deserialize(): can't load '%s'\n",filename);
+        xprint(ERROR,"gadget_project_deserialize(): can't load '%s'\n",filename);
         goto _error;
     }
 
     if(!(p->name) || !strlen(p->name) || !(p->id) || !strlen(p->id)) {
-        fprintf(stderr,"gadget_project_deserialize(): incompatible project file '%s'\n",filename);
+        xprint(ERROR,"gadget_project_deserialize(): incompatible project file '%s'\n",filename);
         goto _error;
     } else {
-        fprintf(stderr,"gadget_project_deserialize(): project loaded from '%s': name=%s, id=%s\n",
+        xprint(VERBOSE,"gadget_project_deserialize(): project loaded from '%s': name=%s, id=%s\n",
             filename, p->name, p->id );
     }   
 

@@ -17,6 +17,10 @@
 #include <sys/wait.h>
 #include <uuid/uuid.h>
 
+#define _UTILS_C
+#include "utils.h"
+#include "config.h"
+
 #if _WIN32
 #  include <stdlib.h>
 #elif __APPLE__
@@ -218,12 +222,12 @@ int xfcp(FILE *src, FILE *dst)
     return w;
 }
 
-int xcp(char *source,char *destination) {
+int xcp(const char *source,const char *destination) {
     FILE *src=0,*dst=0;
     int ret=0;
     char path_sep='/';
     char *p=0,*q=0;
-    int p_size=0; 
+    int p_size=0;
 
     if( !(src = fopen(source,"r")) ) {
         fprintf(stderr,"ERROR: cannot open '%s'\n",source);
@@ -231,7 +235,7 @@ int xcp(char *source,char *destination) {
         goto _return;
     }
 
-    if( xis_dir( destination ) ) 
+    if( xis_dir( destination ) )
     {
         q=strrchr(source,path_sep)+1;
         p_size= strlen(destination)+strlen(q)+2;
@@ -290,7 +294,7 @@ char *xfread(FILE* in)
         if(read<0) {
             fprintf(stderr,"ERROR: while reading\n");
         }
-        ptr+=read;        
+        ptr+=read;
     }
     buf[size]=0;
 
@@ -322,10 +326,10 @@ int xfrun(const char *cmd, FILE *out)
     if(!out) return 1;
     in = popen(cmd, "r");
     if (in == NULL) goto _return;
-    
+
     if((ret=xfcp(in,out))<0) {
         pclose(in);
-        return ret; 
+        return ret;
     }
 
 _return:
@@ -341,64 +345,262 @@ int xrun(const char *cmd, char **output_buf)
 
     if(!(fp=tmpfile())) {
         fprintf(stderr,"ERROR: cannot create temp file.");
-        return -1; 
+        return -1;
     }
 
     ret=xfrun(cmd,fp);
     fseek(fp,0,SEEK_SET);
     ptr=xfread(fp);
+    fclose(fp);
     *output_buf=ptr;
 
     return ret;
 }
 
-int xexec(const char* process, ...) {
-    //int ret = 0;
-    const int args_max = 64;
-    int child_status = 0;
-    int status;
-    pid_t pid;
-    va_list varargs;
-    char* args[args_max];
-    int args_count = 0;
+// helper function
+char** vbuild_argv(char *cmd, va_list varargs )
+{
+    int     argc=0;
+    char    **argv=0;
 
-    memset(args, 0, sizeof(args));
-    va_start(varargs, process);
-    while(args_count < args_max) {
-        args[args_count] = va_arg(varargs, char*);
+    if(!(argv=malloc(sizeof(char*)))) goto _error;
+    argv[argc]=strdup(cmd);
+    argc++;
 
-        if(args[args_count] == (char*) 0)
+    while(1) {
+        argv=realloc(argv,sizeof(char*)*(argc+1));
+
+        char *p = va_arg(varargs, char*);
+        //note: the conversion to (int) is necessary
+        //      to enable vbuild_argv(cmd,arg1,arg2,0)
+        //      and not only vbuild_argv(cmd,arg1,arg2,(char*)0).
+        //      seems to be some variadic madness that
+        //      has been observed on mac os using clang
+        if((int)p == 0) {
+            argv[argc] = (char*) 0;
             break;
-        args_count++;
+        } else {
+            argv[argc] = strdup(p);
+            //xprint(VERBOSE,"vbuild_argv(): argv[%d]=%s\n",argc,argv[argc]);
+        }
+        argc++;
     }
 
-    // fork off executable
-    pid = fork();
+    return argv;
 
-    // if we're in child process
-    if(pid == 0) {
-        if(execvp(process, (char**)args)) {
-            fprintf(stderr, "ERROR occurred launching `%s`\n", process);
-        }
-        return 1;
-    }
-    // else an error occurred
-    else if(pid < 0){
-        fprintf(stderr, "ERROR forking process for `%s`\n", process);
-        return 1;
-    }
-    // else we're parent
-    pid_t wait_status = waitpid(pid, &child_status, 0);
-    if(wait_status == -1) {
-        fprintf(stderr, "ERROR\n");
-        return 1;
-    }
-    if(WIFEXITED(child_status)){
-        status = WEXITSTATUS(child_status);
-        if(status){
-            fprintf(stderr, "ERROR from `%s`\n", process);
-            return 1;
-        }
-    }
+_error:
+    xprint(VERBOSE,"ERROR!\n");
     return 0;
+}
+
+int xpopen(int *pipes, char* cmd, char **argv)
+{
+    int     in[2];
+    int     out[2];
+    int     err[2];
+    pid_t   pid;
+
+    // create pipes
+    if(pipe(in))  goto error_in;
+    if(pipe(out)) goto error_out;
+    if(pipe(err)) goto error_err;
+
+    pid = fork();
+    switch (pid) {
+     case -1: // error
+         goto error_fork;
+     case 0: // child process
+         close(in[1]);
+         close(out[0]);
+         close(err[0]);
+
+         dup2(in[0], 0);   // use in[0] as stdin
+         dup2(out[1], 1);  // use out[1] as stdout
+         dup2(err[1], 2);  // use err[1] as stderr
+
+         execvp(cmd,argv);
+
+         return -1;        // shall never be executed
+     default: // parent process
+         close(in[0]);  // not used in parent
+         close(out[1]); // not used in parent
+         close(err[1]); // not used in parent
+
+         pipes[0] = in[1];  // write to child stdin
+         pipes[1] = out[0]; // read child stdout
+         pipes[2] = err[0]; // read child stderr
+         return pid;
+    }
+
+error_fork:
+    close(err[0]);
+    close(err[1]);
+error_err:
+    close(out[0]);
+    close(out[1]);
+error_out:
+    close(in[0]);
+    close(in[1]);
+error_in:
+    return -1;
+}
+
+int xpopenl(int *pipes, char *cmd, ...)
+{
+    va_list varargs;
+    char **argv;
+
+    va_start(varargs, cmd);
+    argv=vbuild_argv(cmd, varargs);
+    va_end(varargs);
+
+    return xpopen(pipes,cmd,argv);
+}
+
+int xpclose(const pid_t pid, int *pipes)
+{
+    int s;
+
+    waitpid(pid, &s, 0);
+    close(pipes[0]);
+    close(pipes[1]);
+    close(pipes[2]);
+
+    return s;
+}
+
+subprocess_t *subprocess_run(char *cmd, ...)
+{
+    char **argv;
+    va_list varargs;
+
+    va_start(varargs,cmd);
+    argv=vbuild_argv(cmd,varargs);
+    va_end(varargs);
+
+    return subprocess_runv(cmd,argv);
+}
+
+subprocess_t *subprocess_run_gw(char *cmd, ...)
+{
+    va_list varargs;
+    char **argv;
+    subprocess_t *p;
+
+    va_start(varargs,cmd);
+    argv=vbuild_argv(cmd,varargs);
+    va_end(varargs);
+
+    p=subprocess_runv(cmd,argv);
+    subprocess_grab_output(p);
+    
+    return p;
+}
+
+subprocess_t *subprocess_runv(char *cmd, char **argv)
+{
+    subprocess_t *r=0;
+    int len=0;
+    char *p;
+    int i;
+
+    if(!(r=malloc(sizeof(subprocess_t)))) goto _error;
+    memset(r,0,sizeof(subprocess_t));
+    r->cmd=strdup(cmd);
+    r->argv=argv;
+    if(!r->argv) goto _error;
+
+    for(r->argc=0; r->argv[r->argc]!=0; r->argc++) {
+        len += strlen(r->argv[r->argc]);
+    }
+
+    if(!(r->cmdline=malloc(sizeof(char)*(len+1+r->argc)))) goto _error;
+    for(i=0, p=r->cmdline; i<r->argc; i++) {
+        if(!(p=stpcpy(p,r->argv[i]))) goto _error;
+        *p=' ';
+        p++;
+    }
+    *(--p)=0;
+
+    r->exit    = -314151;
+    r->status  = -314151;
+    r->max_out = 8196;
+    r->out     = 0;
+    r->err     = 0;
+
+    r->pid = xpopen(r->pipes,r->cmd,r->argv);
+    return r;
+
+_error:
+    if(r) subprocess_free(r);
+    return 0;
+}
+
+int subprocess_wait(subprocess_t *p)
+{
+    if(waitpid(p->pid, &p->status, 0)!=p->pid) {
+        xprint(VERBOSE,"ERROR: waitpid returned negative value\n");
+        return errno;
+    }
+    if(WIFEXITED(p->status)) {
+        p->exit = WEXITSTATUS(p->status);
+    } else {
+        xprint(VERBOSE,"ERROR: child quit abnormally\n");
+    }
+
+    return p->exit;
+}
+
+int subprocess_grab_output(subprocess_t *p)
+{
+    FILE *f=0,*g=0;
+    int  i=0,j=0;
+
+    f = fdopen(p->pipes[1],"r");
+    g = fdopen(p->pipes[2],"r");
+
+    p->out = malloc(sizeof(char)*(p->max_out+1));
+    p->err = malloc(sizeof(char)*(p->max_out+1));
+
+    i=j=0;
+    while( !(feof(f) && feof(g)) ) {
+        int c;
+        if((c=fgetc(f))!=EOF) { if(i<p->max_out) p->out[i++]=c; }
+        if((c=fgetc(g))!=EOF) { if(j<p->max_out) p->err[j++]=c; }
+    }
+    p->out[i]=p->err[j]=0;
+    fclose(f);
+    fclose(g);
+
+    subprocess_wait(p);
+
+    return p->exit;
+}
+
+void subprocess_free(subprocess_t *p) {
+    if(p) {
+        if(p->cmd) free(p->cmd);
+        if(p->argv) {
+            for(int i=0; i<p->argc; i++) {
+                if(p->argv[i]) free(p->argv[i]);
+            }
+        }
+        if(p->cmdline) free(p->cmdline);
+        if(p->out) free(p->out);
+        if(p->err) free(p->err);
+    }
+}
+
+int xprint(int type,const char *format, ...)
+{
+    int ret=0;
+    va_list args;
+
+    if( type!=VERBOSE || _VERBOSE==1) {
+        va_start(args, format);
+        ret=vfprintf(stderr, format, args);
+        va_end(args);
+    }
+
+    return ret;
 }

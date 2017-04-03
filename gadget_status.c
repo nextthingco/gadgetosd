@@ -14,25 +14,22 @@
 #include "gadget_project.h"
 #include "mongoose_utils.h"
 
-void gadget_delete_help()
+void gadget_status_help()
 {
     xprint( NORMAL,
             "Create embedded Linux apps - easy.\n"
             "\n"
-            "usage: gadget stop [<project_path>]\n"
+            "usage: gadget status\n"
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
             "  -v, --verbose         be verbose\n"
-            "  <project_path>        delete project in path (default: .) from device\n"
           );
 }
 
-int gadget_delete(int argc,char **argv)
+int gadget_status(int argc,char **argv)
 {
     int c, ret=0;
-    char   *project_path=NULL;
-    gadget_project_t *project=0;
 
     while (1)
     {
@@ -59,7 +56,7 @@ int gadget_delete(int argc,char **argv)
                 break;
 
             case 'h':
-                gadget_delete_help();
+                gadget_status_help();
                 ret=0;
                 goto _return;
 
@@ -72,14 +69,8 @@ int gadget_delete(int argc,char **argv)
         }
     }
 
-    if(optind == argc) {
-        project_path=".";
-    } else {
-        project_path=argv[optind++];
-    }
-
     if(optind < argc) {
-        xprint(ERROR,"gadget delete: ERROR, unknown extra arguments: ");
+        xprint(ERROR,"gadget build: ERROR, unknown extra arguments: ");
         while (optind < argc)
             xprint(ERROR, "%s ", argv[optind++]);
         putchar ('\n');
@@ -87,21 +78,8 @@ int gadget_delete(int argc,char **argv)
         goto _return;
     }
 
-    if(!xis_dir("%s/.gadget",project_path)) {
-        xprint(ERROR,"gadget delete: ERROR: not a gadget project: '%s'\n",project_path);
-        ret=1;
-        goto _return;
-    }
-
-    if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        xprint(ERROR,"gadget delete: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
-        goto _return;
-    }
-    
-    do_rpc(ENDPOINT_APPLICATION_DELETE,project);
+    do_rpc(ENDPOINT_APPLICATION_STATUS,0);
 
 _return:
-    if(project) gadget_project_destruct(project);
-
     return 0;
 }

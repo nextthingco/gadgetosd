@@ -44,10 +44,12 @@ mongoose_utils.o \
 gadgetosd.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
+gadgetosd_api_application_create.o \
 gadgetosd_api_application_start.o \
 gadgetosd_api_application_stop.o \
 gadgetosd_api_application_delete.o \
 gadgetosd_api_application_purge.o \
+gadgetosd_api_application_status.o \
 
 
 G_OBJ = utils.o \
@@ -62,6 +64,7 @@ gadget_start.o \
 gadget_delete.o \
 gadget_purge.o \
 gadget_deploy.o \
+gadget_status.o \
 
 
 %.o: %.c
@@ -88,8 +91,8 @@ libinih.a: ini.c ini.h
 	${CC} -c ini.c $(CFLAGS) -o ini.o
 	${AR} rcs libinih.a ini.o
 
-test_utils: test_utils.o utils.o libmongoose.a libinih.a
+test_utils: test_utils.o utils.o config.o libmongoose.a libinih.a
 	@echo "  > Building $@"
-	$(CC) -o test_utils test_utils.o utils.o $(CFLAGS) $(LIBS)
+	$(CC) -o test_utils test_utils.o utils.o config.o $(CFLAGS) $(LIBS)
 clean:
 	rm *.o *.a gadget gadgetosd
