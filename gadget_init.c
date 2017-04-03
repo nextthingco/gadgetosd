@@ -127,11 +127,6 @@ int gadget_init(int argc, char **argv)
     //xcp("/usr/local/share/gadget/templates/alpine/blink-leds",target_dir);
     //xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
-    if( access( TEMPLATE_PREFIX, F_OK) == -1 ) {
-        xprint(ERROR, "gadget init: template prefix '%s' doesn't exist.\n", TEMPLATE_PREFIX);
-        ret=1;
-        goto _return;
-    }
     // q'n'd fix:
     asprintf(&cmd,"cp -va %s/alpine/* %s/",TEMPLATE_PREFIX,target_dir);
     FILE* proc = popen(cmd, "r");
