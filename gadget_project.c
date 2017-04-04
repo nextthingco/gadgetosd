@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include "gadget_project.h"
 #include "utils.h"
@@ -132,6 +135,8 @@ gadget_project_t* gadget_project_deserialize( char* filenameformat, ... )
         goto _error;
     }
 
+    p->path=dirname(dirname(strdup(filename))); 
+
     if(!(p->name) || !strlen(p->name) || !(p->id) || !strlen(p->id)) {
         xprint(ERROR,"gadget_project_deserialize(): incompatible project file '%s'\n",filename);
         goto _error;
@@ -151,4 +156,42 @@ _error:
 _return:
     if(filename) free(filename);
     return p;
+}
+
+int gadget_project_build( gadget_project_t *self )
+{
+    char pwd[PATH_MAX]=".";
+    int ret=0;
+    subprocess_t *p=0;
+
+    if(!getcwd(pwd,PATH_MAX)) {
+        xprint(ERROR,"gadget_project_build(): ERROR: cannot find out current directory");
+        ret=errno;
+        goto _return;
+    }
+
+    if(chdir(self->path)) {
+        xprint(ERROR,"gadget build: ERROR: cannot access project path '%s'\n",self->path);
+        ret=errno;
+        goto _return;
+    }
+
+    p=subprocess_run_gw("docker","build","-t",self->container_image_name,".",0);
+    if(p->exit) {
+        xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed:\n\n",p->cmdline);
+        xprint(ERROR,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+        goto _return;
+    }
+    xprint(VERBOSE,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+    subprocess_free(p); p=0;
+
+_return:
+    if(p) subprocess_free(p);
+
+    if(chdir(pwd)) {
+        xprint(ERROR,"gadget build: ERROR: cannot return to previous directory '%s'\n",pwd);
+        ret=errno;
+    }
+
+    return ret;
 }
