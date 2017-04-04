@@ -4,7 +4,11 @@
 #include <libgen.h>
 #include "utils.h"
 
+#ifndef _WIN32
 char* GADGETOSD_SERVER  = "192.168.81.1";
+#else
+char* GADGETOSD_SERVER  = "192.168.82.1";
+#endif
 char* GADGETOSD_PORT    = "31415";
 
 char* ENDPOINT_VERSION             = "/api/version";
