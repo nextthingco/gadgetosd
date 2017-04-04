@@ -128,7 +128,7 @@ int gadget_init(int argc, char **argv)
     //xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
     // q'n'd fix:
-    asprintf(&cmd,"cp -va %s/alpine/* %s/",TEMPLATE_PREFIX,target_dir);
+    asprintf(&cmd,"cp -va %s/blink-leds/* %s/",TEMPLATE_PREFIX,target_dir);
     FILE* proc = popen(cmd, "r");
     int status = pclose(proc);
     if(status < 0) {

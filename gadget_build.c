@@ -36,10 +36,9 @@ void gadget_build_help()
 int gadget_build(int argc, char **argv)
 {
     int c,ret=0;
-    char *project_path=0,*project_filename=".gadget/config",*container_name=0,*container_filename=0;
+    char *project_path=0,*project_filename=".gadget/config";
     char pwd[PATH_MAX]; //previous working dir
     gadget_project_t *project=0;
-    subprocess_t *p=0;
 
     while (1)
     {
@@ -94,7 +93,6 @@ int gadget_build(int argc, char **argv)
         goto _return;
     }
 
-
     if(!getcwd(pwd,PATH_MAX)) {
         xprint(ERROR,"gadget build: ERROR: cannot find out current directory");
         ret=errno;
@@ -122,10 +120,6 @@ int gadget_build(int argc, char **argv)
     gadget_project_build(project);
 
 _return:
-    if(p)                  subprocess_free(p);
-    if(container_name)     free(container_name);
-    if(container_filename) free(container_filename);
-
     if(chdir(pwd)) {
         xprint(ERROR,"gadget build: ERROR: cannot return to previous directory '%s'\n",pwd);
         ret=errno;
