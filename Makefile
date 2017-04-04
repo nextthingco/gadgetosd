@@ -95,4 +95,4 @@ test_utils: test_utils.o utils.o config.o libmongoose.a libinih.a
 	@echo "  > Building $@"
 	$(CC) -o test_utils test_utils.o utils.o config.o $(CFLAGS) $(LIBS)
 clean:
-	rm *.o *.a gadget gadgetosd
+	rm -rf *.o *.a gadget gadgetosd
