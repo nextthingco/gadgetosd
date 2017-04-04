@@ -65,6 +65,7 @@ gadget_delete.c
 gadget_purge.c
 gadget_deploy.c
 gadget_status.c
+docker.c
 )
 SET( GADGET_EXECUTABLE gadget )
 ADD_EXECUTABLE("${GADGET_EXECUTABLE}" ${GADGET_SRCS} )

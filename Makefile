@@ -65,6 +65,7 @@ gadget_delete.o \
 gadget_purge.o \
 gadget_deploy.o \
 gadget_status.o \
+docker.o
 
 
 %.o: %.c
