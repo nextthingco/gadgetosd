@@ -295,7 +295,7 @@ int gadget_deploy(int argc,char **argv)
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); xprint(NORMAL,".", project->name); }
 
     do_rpc(ENDPOINT_APPLICATION_CREATE,project); xprint(NORMAL,".");
-    do_rpc(ENDPOINT_APPLICATION_START,project);  xprint(NORMAL,"done!");
+    do_rpc(ENDPOINT_APPLICATION_START,project);  xprint(NORMAL,"done!\n");
 
     mg_mgr_free(&mgr);
 
