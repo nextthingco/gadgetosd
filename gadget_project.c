@@ -12,6 +12,7 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <errno.h>
+#include <limits.h>
 
 #include "gadget_project.h"
 #include "utils.h"
