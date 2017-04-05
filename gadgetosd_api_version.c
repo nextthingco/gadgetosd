@@ -13,7 +13,7 @@ void handle_version(struct mg_connection *nc, int ev, void *p) {
                "\r\n",
                GADGETOSD_MAJOR,
                GADGETOSD_MINOR,
-               GADGETOSD_BUGFIX );
+               GADGETOSD_PATCH );
             nc->flags |= MG_F_SEND_AND_CLOSE;
             break;
         }
