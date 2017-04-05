@@ -80,12 +80,17 @@ PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_
 SET (SVG_ICON_FILE "${CMAKE_SOURCE_DIR}/icon.svg")
 
 ## install assets
-INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/templates/alpine DESTINATION share/gadget/templates/
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/templates DESTINATION share/gadget/
 USE_SOURCE_PERMISSIONS
 )
 
+FILE(DOWNLOAD http://opensource.nextthing.co/githost/chiptainer_alpine/stable/latest ${CMAKE_BINARY_DIR}/chiptainer_alpine_stable_latest SHOW_PROGRESS)
+FILE(READ ${CMAKE_BINARY_DIR}/chiptainer_alpine_stable_latest CHIPTAINER_ALPINE_LATEST)
+STRING(REGEX REPLACE "\n$" "" CHIPTAINER_ALPINE_LATEST "${CHIPTAINER_ALPINE_LATEST}")
 
-FILE(DOWNLOAD https://chiptainer_alpine.surge.sh/alpine_armhf_rootfs.tar.gz ${CMAKE_BINARY_DIR}/rootfs.tar.gz SHOW_PROGRESS)
+SET(CHIPTAINER_ALPINE_URL http://opensource.nextthing.co/githost/chiptainer_alpine/stable/${CHIPTAINER_ALPINE_LATEST}/chiptainer_alpine_rootfs.tar.gz)
+MESSAGE( STATUS "downloading ${CHIPTAINER_ALPINE_URL}" )
+FILE(DOWNLOAD ${CHIPTAINER_ALPINE_URL} ${CMAKE_BINARY_DIR}/rootfs.tar.gz SHOW_PROGRESS)
 INSTALL(FILES ${CMAKE_BINARY_DIR}/rootfs.tar.gz
 DESTINATION share/gadget/templates/alpine/
 PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
