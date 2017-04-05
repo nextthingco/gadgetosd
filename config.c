@@ -5,7 +5,7 @@
 #include <string.h>
 #include "utils.h"
 
-#ifndef _WIN32
+#ifndef __CYGWIN__
 char* GADGETOSD_SERVER  = "192.168.81.1";
 #else
 char* GADGETOSD_SERVER  = "192.168.82.1";
