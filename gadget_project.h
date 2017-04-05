@@ -4,6 +4,7 @@
 typedef struct gadget_project_t {
     char *name;
     char *id;
+    char *path;
     char *container_name;
     char *container_image_name;
 } gadget_project_t;
@@ -19,5 +20,8 @@ int gadget_project_serialize( char* filename, gadget_project_t *p );
 
 // de-serialize from ini file
 gadget_project_t* gadget_project_deserialize( char* filenameformat, ... );
+
+// build project
+int gadget_project_build(gadget_project_t *self);
 
 #endif

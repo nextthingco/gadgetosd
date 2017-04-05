@@ -74,8 +74,8 @@ _return:
 
 int gadget_help(int argc, char **argv)
 {
-    printf(
-"Create embedded Linux apps - easy.\n"
+    xprint(NORMAL,
+"Gadget v%d.%d.%d Create embedded Linux apps - easy.\n"
 "\n"
 "usage: gadget <command> [<args>]\n"
 "\n"
@@ -93,7 +93,8 @@ int gadget_help(int argc, char **argv)
 "  -h, --help  show this help message and exit\n"
 "\n"
 "get help for specific command:\n"
-"  gadget <command> --help\n"
+"  gadget <command> --help\n",
+GADGETOSD_MAJOR,GADGETOSD_MINOR,GADGETOSD_PATCH
 );
 
     return 0;

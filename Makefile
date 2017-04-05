@@ -17,7 +17,6 @@ ifeq ($(OS),Windows_NT)
             CFLAGS += -D IA32
         endif
     endif
-    PATCH=git apply --whitespace=fix patch/unweak_mbuf.patch
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
@@ -45,6 +44,7 @@ mongoose_utils.o \
 gadgetosd.o \
 gadgetosd_api_version.o\
 gadgetosd_api_application_add.o \
+gadgetosd_api_application_create.o \
 gadgetosd_api_application_start.o \
 gadgetosd_api_application_stop.o \
 gadgetosd_api_application_delete.o \
@@ -65,6 +65,7 @@ gadget_delete.o \
 gadget_purge.o \
 gadget_deploy.o \
 gadget_status.o \
+docker.o
 
 
 %.o: %.c
@@ -83,7 +84,6 @@ gadget: $(G_OBJ) libmongoose.a libinih.a
 
 libmongoose.a: mongoose.c mongoose.h
 	@echo "  > Building $@"
-	${PATCH}
 	${CC} -c mongoose.c $(CFLAGS) $(MONGOOSE_FLAGS) -o mongoose.o
 	${AR} rcs libmongoose.a mongoose.o
 
@@ -92,8 +92,8 @@ libinih.a: ini.c ini.h
 	${CC} -c ini.c $(CFLAGS) -o ini.o
 	${AR} rcs libinih.a ini.o
 
-test_utils: test_utils.o utils.o libmongoose.a libinih.a
+test_utils: test_utils.o utils.o config.o libmongoose.a libinih.a
 	@echo "  > Building $@"
-	$(CC) -o test_utils test_utils.o utils.o $(CFLAGS) $(LIBS)
+	$(CC) -o test_utils test_utils.o utils.o config.o $(CFLAGS) $(LIBS)
 clean:
-	rm *.o *.a gadget gadgetosd
+	rm -rf *.o *.a gadget gadgetosd

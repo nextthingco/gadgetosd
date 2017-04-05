@@ -1,41 +1,74 @@
 # ex: softtabstop=2 shiftwidth=2 tabstop=2 expandtab
 
-image: docker:latest
-
-services:
-  - docker:dind
-
-
 variables:
-  BUILD_CONTAINER: ${CI_REGISTRY}/nextthingco/gadgetosd:unstable
-  UPLOAD_CONTAINER: ${CI_REGISTRY}/nextthingco/ci-tools:unstable
+  BUILD_CONTAINER: ${CI_REGISTRY}/nextthingco/gadgetosd:latest
+  CI_TOOLS_CONTAINER: ${CI_REGISTRY}/nextthingco/ci-tools:unstable
 
 stages:
   - build
 
-before_script:
-  - env
-  - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
-  - docker pull $BUILD_CONTAINER
-  - docker build -t $BUILD_CONTAINER dockerfiles/ubuntu
-  - docker push $BUILD_CONTAINER
-
 build:
+  image: docker:latest
+
+  services:
+    - docker:dind
+
   stage: build
   script:
+    - env
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
     - docker run --rm
       -v $PWD:/root
       -w /root
       $BUILD_CONTAINER
-      make -s
-    - docker pull $UPLOAD_CONTAINER
+      ./build_cmake.sh
+    - mkdir build/ubuntu
+    - mv build/*.deb build/ubuntu/
+    - cd build
+    - docker pull $CI_TOOLS_CONTAINER
     - docker run
       -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
       -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
       -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
       -e CI_PROJECT_NAME=${CI_PROJECT_NAME}
       -e CI_BUILD_REF_NAME=${CI_BUILD_REF_SLUG}
-      -e CI_BUILD_ID=${CI_BUILD_ID}
+      -e CI_BUILD_ID=${CI_PIPELINE_ID}
       --rm -v $PWD:/upload -w /upload
-      $UPLOAD_CONTAINER ci-s3-upload
-      gadget
+      $CI_TOOLS_CONTAINER ci-s3-upload
+      ubuntu
+    - docker run
+      -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
+      -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
+      -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
+      --rm $CI_TOOLS_CONTAINER ci-s3-cleanup s3://opensource.nextthing.co/githost/gadgetosd/${CI_BUILD_REF_SLUG}
+
+
+mac-build:
+  stage: build
+  tags: [alex-mac]
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+    - cpack
+    - ls
+    - mkdir mac
+    - cp Gadget.dmg mac/
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
+    - docker pull $CI_TOOLS_CONTAINER
+    - docker run
+      -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
+      -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
+      -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
+      -e CI_PROJECT_NAME=${CI_PROJECT_NAME}
+      -e CI_BUILD_REF_NAME=${CI_BUILD_REF_SLUG}
+      -e CI_BUILD_ID=${CI_PIPELINE_ID}
+      --rm -v $PWD:/upload -w /upload
+      $CI_TOOLS_CONTAINER ci-s3-upload
+      mac
+    - docker run
+      -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
+      -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
+      -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
+      --rm $CI_TOOLS_CONTAINER ci-s3-cleanup s3://opensource.nextthing.co/githost/gadgetosd/${CI_BUILD_REF_SLUG}

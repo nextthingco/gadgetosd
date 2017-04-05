@@ -8,25 +8,22 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "mongoose.h"
 
 #include "config.h"
 #include "utils.h"
 #include "gadget_project.h"
 #include "mongoose_utils.h"
 
-static int verbose;
-
 void gadget_status_help()
 {
-    printf(
+    xprint( NORMAL,
             "Create embedded Linux apps - easy.\n"
             "\n"
             "usage: gadget status\n"
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
-            "  --verbose             be verbose\n"
+            "  -v, --verbose         be verbose\n"
           );
 }
 
@@ -38,14 +35,14 @@ int gadget_status(int argc,char **argv)
     {
         static struct option long_options[] =
         {
-            {"verbose", no_argument,       &verbose, 1},
+            {"verbose", no_argument,       0, 'v'},
             {"help",    no_argument,       0, 'h'},
             {0, 0, 0, 0}
         };
 
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "h",
+        c = getopt_long (argc, argv, "hv",
                 long_options, &option_index);
 
         /* Detect the end of the options. */
@@ -54,14 +51,8 @@ int gadget_status(int argc,char **argv)
 
         switch (c)
         {
-            case 0:
-                /* If this option set a flag, do nothing else now. */
-                if (long_options[option_index].flag != 0)
-                    break;
-                printf("option %s", long_options[option_index].name);
-                if (optarg)
-                    printf (" with arg %s", optarg);
-                printf ("\n");
+            case 'v':
+                _VERBOSE=1;
                 break;
 
             case 'h':
@@ -78,13 +69,10 @@ int gadget_status(int argc,char **argv)
         }
     }
 
-    if (verbose)
-        puts ("verbose flag is set\n");
-
     if(optind < argc) {
-        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        xprint(ERROR,"gadget build: ERROR, unknown extra arguments: ");
         while (optind < argc)
-            fprintf (stderr,"%s ", argv[optind++]);
+            xprint(ERROR, "%s ", argv[optind++]);
         putchar ('\n');
         ret = -1;
         goto _return;
@@ -93,5 +81,5 @@ int gadget_status(int argc,char **argv)
     do_rpc(ENDPOINT_APPLICATION_STATUS,0);
 
 _return:
-    return 0;
+    return ret;
 }

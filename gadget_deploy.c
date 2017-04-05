@@ -8,13 +8,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "mongoose.h"
 #include "utils.h"
 #include "config.h"
 #include "gadget_project.h"
+#include "mongoose.h"
 #include "mongoose_utils.h"
-
-static int verbose;
 
 /* RESTful server host and request URI */
 static int s_exit_flag = 0;
@@ -24,33 +22,62 @@ extern struct mg_connection *mg_connect_http_base(
     struct mg_connect_opts opts, const char *schema, const char *schema_ssl,
     const char *url, const char **path, char **user, char **pass, char **addr);
 
+//-- BEGIN: work around weak declaratioon problem on windows
+// we redfine mbuf_init(), mbuf_resize() and mbuf_free() here
+void mbuf_init(struct mbuf *mbuf, size_t initial_size) {
+  mbuf->len = mbuf->size = 0;
+  mbuf->buf = NULL;
+  mbuf_resize(mbuf, initial_size);
+}
+
+void mbuf_free(struct mbuf *mbuf) {
+  if (mbuf->buf != NULL) {
+    free(mbuf->buf);
+    mbuf_init(mbuf, 0);
+  }
+}
+
+void mbuf_resize(struct mbuf *a, size_t new_size) {
+  if (new_size > a->size || (new_size < a->size && new_size >= a->len)) {
+    char *buf = (char *) realloc(a->buf, new_size);
+    /*
+     * In case realloc fails, there's not much we can do, except keep things as
+     * they are. Note that NULL is a valid return value from realloc when
+     * size == 0, but that is covered too.
+     */
+    if (buf == NULL && new_size != 0) return;
+    a->buf = buf;
+    a->size = new_size;
+  }
+}
+//-- END: work around weak declaratioon problem on windows
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
-  struct http_message *hm = (struct http_message *) ev_data;
-  int connect_status;
+    struct http_message *hm = (struct http_message *) ev_data;
+    int connect_status;
 
-  switch (ev) {
-    case MG_EV_CONNECT:
-      connect_status = *(int *) ev_data;
-      if (connect_status != 0) {
-        printf("Error connecting %s\n", strerror(connect_status));
-        s_exit_flag = 1;
-      }
-      break;
-    case MG_EV_HTTP_REPLY:
-      printf("Got reply:\n%.*s\n", (int) hm->body.len, hm->body.p);
-      nc->flags |= MG_F_SEND_AND_CLOSE;
-      s_exit_flag = 1;
-      break;
-    case MG_EV_CLOSE:
-      if (s_exit_flag == 0) {
-        printf("Server closed connection\n");
-        s_exit_flag = 1;
-      };
-      break;
-    default:
-      break;
-  }
+    switch (ev) {
+        case MG_EV_CONNECT:
+            connect_status = *(int *) ev_data;
+            if (connect_status != 0) {
+                xprint(ERROR,"Error connecting %s\n", strerror(connect_status));
+                s_exit_flag = 1;
+            }
+            break;
+        case MG_EV_HTTP_REPLY:
+            xprint(VERBOSE,"Got reply:\n%.*s\n", (int) hm->body.len, hm->body.p);
+            nc->flags |= MG_F_SEND_AND_CLOSE;
+            s_exit_flag = 1;
+            break;
+        case MG_EV_CLOSE:
+            if (s_exit_flag == 0) {
+                xprint(NORMAL,"Server closed connection\n");
+                s_exit_flag = 1;
+            };
+            break;
+        default:
+            break;
+    }
 }
 
 
@@ -109,7 +136,7 @@ struct mg_connection *mg_postfile_http(struct mg_mgr *mgr,
     while(! feof(fp) ) {
         read=fread(buf,sizeof(char),buf_len,fp);
         if(read<0) {
-            fprintf(stderr,"ERROR: while reading file");
+            xprint(ERROR,"ERROR: while reading file");
         }
         mg_send(nc,buf,read);
         mg_mgr_poll(mgr, 1);
@@ -126,19 +153,19 @@ _return:
     if(pass) free(pass);
     if(addr) free(addr);
     if(header) free(header);
-    return nc;
+    return ret;
 }
 
 void gadget_deploy_help()
 {
-    printf(
+    xprint( NORMAL,
             "Create embedded Linux apps - easy.\n"
             "\n"
             "usage: gadget deploy [<project_path>]\n"
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
-            "  --verbose             be verbose\n"
+            "  -v, --verbose         be verbose\n"
             "  <project_path>        build project in path (default: .)\n"
           );
 }
@@ -151,20 +178,21 @@ int gadget_deploy(int argc,char **argv)
     char   *project_path=NULL;
     char   *payload_path=NULL;
     gadget_project_t *project=0;
+    subprocess_t *p;
     char   *tmpstr=0;
 
     while (1)
     {
         static struct option long_options[] =
         {
-            {"verbose", no_argument,       &verbose, 1},
+            {"verbose", no_argument,       0, 'v'},
             {"help",    no_argument,       0, 'h'},
             {0, 0, 0, 0}
         };
 
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "h",
+        c = getopt_long (argc, argv, "hv",
                 long_options, &option_index);
 
         /* Detect the end of the options. */
@@ -173,14 +201,8 @@ int gadget_deploy(int argc,char **argv)
 
         switch (c)
         {
-            case 0:
-                /* If this option set a flag, do nothing else now. */
-                if (long_options[option_index].flag != 0)
-                    break;
-                printf("option %s", long_options[option_index].name);
-                if (optarg)
-                    printf (" with arg %s", optarg);
-                printf ("\n");
+            case 'v':
+                _VERBOSE=1;
                 break;
 
             case 'h':
@@ -197,9 +219,6 @@ int gadget_deploy(int argc,char **argv)
         }
     }
 
-    if (verbose)
-        puts ("verbose flag is set\n");
-
     if(optind == argc) {
         project_path=".";
     } else {
@@ -207,53 +226,76 @@ int gadget_deploy(int argc,char **argv)
     }
 
     if(optind < argc) {
-        fprintf(stderr,"gadget build: ERROR, unknown extra arguments: ");
+        xprint(ERROR,"gadget build: ERROR, unknown extra arguments: ");
         while (optind < argc)
-            fprintf (stderr,"%s ", argv[optind++]);
+            xprint(ERROR, "%s ", argv[optind++]);
         putchar ('\n');
         ret = -1;
         goto _return;
     }
 
     if(!xis_dir("%s/.gadget",project_path)) {
-        fprintf(stderr,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
+        xprint(ERROR,"gadget build: ERROR: not a gadget project: '%s'\n",project_path);
         ret=1;
         goto _return;
     }
 
     if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        fprintf(stderr,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
-        goto _return;
-    }
-
-    if(asprintf(&payload_path,"%s/%s_%s.tar",project_path,project->name,project->id)<0)
-    {
-        fprintf(stderr,"gadget build: ERROR: asprintf returned negative value\n");
-        goto _return;
-    }
-
-    if(!xis_file(payload_path)) {
-        fprintf(stderr,"gadget build: ERROR: cannot read: '%s'\n",payload_path);
+        xprint(ERROR,"gadget deploy: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
         ret=1;
         goto _return;
     }
 
-    do_rpc(ENDPOINT_VERSION,project);
+    // rebuild container image, just in case...
+    gadget_project_build(project);
+
+    char *tmpdir=0;
+    asprintf(&tmpdir,"/tmp/gadget_build_XXXXXX");
+    xprint(VERBOSE,"mkdtemp('%s'): ",tmpdir);
+    if(!mkdtemp(tmpdir)) {
+        xprint(ERROR,"gadget deploy: ERROR: cannot create directory '%s'\n",tmpdir);
+        ret=1;
+        goto _return;
+    }
+    xprint(VERBOSE,"%s\n",tmpdir);
+    if(asprintf(&payload_path,"%s/%s_%s.tar",tmpdir,project->name,project->id)<0)
+    {
+        xprint(ERROR,"gadget deploy: ERROR: asprintf returned negative value\n");
+        goto _return;
+    }
+
+    xprint(VERBOSE,"creating %s\n",payload_path);
+    p=subprocess_run_gw("docker","save",project->container_image_name,"-o",payload_path,0);
+    if(p->exit) {
+        xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed:\n\n",p->cmdline);
+        xprint(ERROR,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+        goto _return;
+    }
+    xprint(VERBOSE,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+    subprocess_free(p); p=0;
+
+    if(!xis_file(payload_path)) {
+        xprint(ERROR,"gadget deploy: ERROR: cannot read: '%s'\n",payload_path);
+        ret=1;
+        goto _return;
+    }
+
+    xprint(NORMAL,"deploying %s...", project->name);
+    do_rpc(ENDPOINT_VERSION,project);            xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_STOP,project);   xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_DELETE,project); xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_PURGE,project);  xprint(NORMAL,".");
 
     mg_mgr_init(&mgr, NULL);
-
-    do_rpc(ENDPOINT_APPLICATION_STOP,project);
-    do_rpc(ENDPOINT_APPLICATION_DELETE,project);
-    do_rpc(ENDPOINT_APPLICATION_PURGE,project);
-
-    fprintf(stderr,"sending %s...\n",payload_path);
+    xprint(VERBOSE,"sending %s...\n",payload_path);
     tmpstr=build_url(ENDPOINT_APPLICATION_ADD,project);
     nc = mg_postfile_http(&mgr, ev_handler, tmpstr, payload_path);
     mg_set_protocol_http_websocket(nc);
-    fprintf(stderr,"requesting %s\n", tmpstr);
-    while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); }
+    xprint(VERBOSE,"requesting %s\n", tmpstr);
+    while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); xprint(NORMAL,".", project->name); }
 
-    do_rpc(ENDPOINT_APPLICATION_START,project);
+    do_rpc(ENDPOINT_APPLICATION_CREATE,project); xprint(NORMAL,".");
+    do_rpc(ENDPOINT_APPLICATION_START,project);  xprint(NORMAL,"done!\n");
 
     mg_mgr_free(&mgr);
 
@@ -262,5 +304,5 @@ _return:
     if(payload_path) free(payload_path);
     if(project) gadget_project_destruct(project);
 
-    return 0;
+    return ret;
 }

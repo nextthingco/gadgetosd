@@ -8,25 +8,22 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "mongoose.h"
 
 #include "config.h"
 #include "utils.h"
 #include "gadget_project.h"
 #include "mongoose_utils.h"
 
-static int verbose;
-
 void gadget_start_help()
 {
-    printf(
+    xprint( NORMAL,
             "Create embedded Linux apps - easy.\n"
             "\n"
             "usage: gadget start [<project_path>]\n"
             "\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
-            "  --verbose             be verbose\n"
+            "  -v, --verbose         be verbose\n"
             "  <project_path>        start project in path (default: .)\n"
           );
 }
@@ -41,14 +38,14 @@ int gadget_start(int argc,char **argv)
     {
         static struct option long_options[] =
         {
-            {"verbose", no_argument,       &verbose, 1},
+            {"verbose", no_argument,       0, 'v'},
             {"help",    no_argument,       0, 'h'},
             {0, 0, 0, 0}
         };
 
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "h",
+        c = getopt_long (argc, argv, "hv",
                 long_options, &option_index);
 
         /* Detect the end of the options. */
@@ -57,14 +54,8 @@ int gadget_start(int argc,char **argv)
 
         switch (c)
         {
-            case 0:
-                /* If this option set a flag, do nothing else now. */
-                if (long_options[option_index].flag != 0)
-                    break;
-                printf("option %s", long_options[option_index].name);
-                if (optarg)
-                    printf (" with arg %s", optarg);
-                printf ("\n");
+            case 'v':
+                _VERBOSE=1;
                 break;
 
             case 'h':
@@ -81,9 +72,6 @@ int gadget_start(int argc,char **argv)
         }
     }
 
-    if (verbose)
-        puts ("verbose flag is set\n");
-
     if(optind == argc) {
         project_path=".";
     } else {
@@ -91,22 +79,22 @@ int gadget_start(int argc,char **argv)
     }
 
     if(optind < argc) {
-        fprintf(stderr,"gadget start: ERROR, unknown extra arguments: ");
+        xprint(ERROR,"gadget start: ERROR, unknown extra arguments: ");
         while (optind < argc)
-            fprintf (stderr,"%s ", argv[optind++]);
+            xprint(ERROR, "%s ", argv[optind++]);
         putchar ('\n');
         ret = -1;
         goto _return;
     }
 
     if(!xis_dir("%s/.gadget",project_path)) {
-        fprintf(stderr,"gadget start: ERROR: not a gadget project: '%s'\n",project_path);
+        xprint(ERROR,"gadget start: ERROR: not a gadget project: '%s'\n",project_path);
         ret=1;
         goto _return;
     }
 
     if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        fprintf(stderr,"gadget start: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+        xprint(ERROR,"gadget start: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
         goto _return;
     }
     
@@ -115,5 +103,5 @@ int gadget_start(int argc,char **argv)
 _return:
     if(project) gadget_project_destruct(project);
 
-    return 0;
+    return ret;
 }
