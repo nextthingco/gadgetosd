@@ -81,10 +81,8 @@ win-build:
   script:
     - set %MSYS2_EXEC% "pacman -Sy --noconfirm gcc make cmake"
     - set %MSYS2_EXEC% "mkdir build"
-    - set %MSYS2_EXEC% "cd build"
-    - set %MSYS2_EXEC% "cmake .."
-    - set %MSYS2_EXEC% "make"
-    - set %MSYS2_EXEC% "ls"
+    - set %MSYS2_EXEC% "cd build && cmake .. && make"
+    - set %MSYS2_EXEC% "ls build/*"
     #~ - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
     #~ - docker pull $CI_TOOLS_CONTAINER
     #~ - docker run
