@@ -3,6 +3,7 @@
 variables:
   BUILD_CONTAINER: ${CI_REGISTRY}/nextthingco/gadgetosd:latest
   CI_TOOLS_CONTAINER: ${CI_REGISTRY}/nextthingco/ci-tools:unstable
+  MSYS2_EXEC: "set PATH=%PATH%;C:/msys64/usr/bin& set MSYSTEM=MSYS& set MSYS2_PATH_TYPE=inherit& C:/msys64/usr/bin/bash -c"
 
 stages:
   - build
@@ -72,3 +73,32 @@ mac-build:
       -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
       -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
       --rm $CI_TOOLS_CONTAINER ci-s3-cleanup s3://opensource.nextthing.co/githost/gadgetosd/${CI_BUILD_REF_SLUG}
+
+
+win-build:
+  stage: build
+  tags: [ec2-msys2-git4win]
+  script:
+    - ${MSYS2_EXEC} "pacman -Sy --no-confirm gcc make cmake"
+    - ${MSYS2_EXEC} "mkdir build"
+    - ${MSYS2_EXEC} "cd build"
+    - ${MSYS2_EXEC} "cmake .."
+    - ${MSYS2_EXEC} "make"
+    - ${MSYS2_EXEC} "ls"
+    #~ - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
+    #~ - docker pull $CI_TOOLS_CONTAINER
+    #~ - docker run
+      #~ -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
+      #~ -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
+      #~ -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
+      #~ -e CI_PROJECT_NAME=${CI_PROJECT_NAME}
+      #~ -e CI_BUILD_REF_NAME=${CI_BUILD_REF_SLUG}
+      #~ -e CI_BUILD_ID=${CI_PIPELINE_ID}
+      #~ --rm -v $PWD:/upload -w /upload
+      #~ $CI_TOOLS_CONTAINER ci-s3-upload
+      #~ mac
+    #~ - docker run
+      #~ -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
+      #~ -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
+      #~ -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
+      #~ --rm $CI_TOOLS_CONTAINER ci-s3-cleanup s3://opensource.nextthing.co/githost/gadgetosd/${CI_BUILD_REF_SLUG}
