@@ -79,7 +79,7 @@ win-build:
   stage: build
   tags: [ec2-msys2-git4win]
   script:
-    - set %MSYS2_EXEC% "pacman -Sy --noconfirm gcc make cmake"
+    - set %MSYS2_EXEC% "pacman -Sy --noconfirm gcc make cmake msys/libutil-linux-devel"
     - set %MSYS2_EXEC% "mkdir build"
     - set %MSYS2_EXEC% "cd build && cmake .. && make"
     - set %MSYS2_EXEC% "ls build/*"
