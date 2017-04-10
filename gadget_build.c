@@ -36,7 +36,7 @@ void gadget_build_help()
 int gadget_build(int argc, char **argv)
 {
     int c,ret=0;
-    char *project_path=0,*project_filename=".gadget/config";
+    char *project_path=0,*project_filename=GADGET_CONFIG_FILE;
     char pwd[PATH_MAX]; //previous working dir
     gadget_project_t *project=0;
 

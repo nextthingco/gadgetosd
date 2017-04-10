@@ -15,6 +15,7 @@ extern char* ENDPOINT_APPLICATION_STATUS;
 
 extern char* EXE_PATH;
 extern char* TEMPLATE_PREFIX;
+extern char* GADGET_CONFIG_FILE;
 
 extern int _VERBOSE;
 

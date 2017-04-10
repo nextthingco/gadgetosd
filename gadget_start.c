@@ -93,8 +93,8 @@ int gadget_start(int argc,char **argv)
         goto _return;
     }
 
-    if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        xprint(ERROR,"gadget start: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+    if(!(project=gadget_project_deserialize("%s/%s",project_path, GADGET_CONFIG_FILE))) {
+        xprint(ERROR,"gadget start: ERROR: cannot read project file: '%s/%s'\n",project_path, GADGET_CONFIG_FILE);
         goto _return;
     }
     

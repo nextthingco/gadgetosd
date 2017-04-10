@@ -23,6 +23,7 @@ char* ENDPOINT_APPLICATION_STATUS  = "/api/v0/application/status";
 
 char* EXE_PATH                     = "initialize me!";
 char* TEMPLATE_PREFIX              = "initialize me!";
+char* GADGET_CONFIG_FILE           = "gadget.cfg";
 
 int   _VERBOSE                     = 0;
 
