@@ -71,6 +71,7 @@ gadget_delete.c
 gadget_purge.c
 gadget_deploy.c
 gadget_status.c
+gadget_shell.c
 docker.c
 )
 SET( GADGET_EXECUTABLE gadget )
