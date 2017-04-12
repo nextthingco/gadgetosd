@@ -34,6 +34,14 @@ EXTERN char* xsstrip(char *s);
 EXTERN char *get_exe_path();
 EXTERN char *xuuid_generate();
 EXTERN char* xsprintf(const char *format, ...);
+
+//NOTE:
+//dirname() in OSX returns a pointer to internalsotrage space allocated on the
+//first call that will be overwritten by subsequent calls.
+//other implementations of dirname() may modify the contents of the string passed
+//xdirname() does not modify the string passed and allocates new memory on each call
+EXTERN char* xdirname(const char *path);
+
 EXTERN int xmkpath(char *dir, mode_t mode);
 EXTERN int xmkdir(mode_t mode, const char *format, ...);
 EXTERN int xis_file(const char *format, ...);

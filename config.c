@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <libgen.h>
 #include "utils.h"
 
@@ -21,6 +22,7 @@ char* ENDPOINT_APPLICATION_PURGE   = "/api/v0/application/purge";
 char* ENDPOINT_APPLICATION_STATUS  = "/api/v0/application/status";
 
 char* EXE_PATH                     = "initialize me!";
+char* EXE_DIRNAME                  = "initialize me!";
 char* TEMPLATE_PREFIX              = "initialize me!";
 
 int   _VERBOSE                     = 0;
@@ -29,27 +31,34 @@ int   _VERBOSE                     = 0;
 
 int initialize()
 {
+    int ret=0;
     if(getenv("GADGETOSD_SERVER")) GADGETOSD_SERVER = getenv("GADGETOSD_SERVER");
     if(getenv("GADGETOSD_PORT"))   GADGETOSD_PORT   = getenv("GADGETOSD_PORT");
 
-    EXE_PATH = get_exe_path();
+    EXE_PATH    = get_exe_path();
+    EXE_DIRNAME = xdirname(EXE_PATH);
 
-    asprintf(&TEMPLATE_PREFIX,"%s/share/gadget/templates",dirname(dirname(EXE_PATH)));
+    char *tmp=xdirname(EXE_DIRNAME);
+    asprintf(&TEMPLATE_PREFIX,"%s/share/gadget/templates",tmp);
     if( access( TEMPLATE_PREFIX, F_OK) == -1 ) {
         // this is a hack to use templates placed next to the gadget binary
         // which is useful for development
-        char *original = TEMPLATE_PREFIX;
-        asprintf(&TEMPLATE_PREFIX,"%s/templates",dirname(EXE_PATH));
+        char *original = strdup(TEMPLATE_PREFIX);
+        asprintf(&TEMPLATE_PREFIX,"%s/templates",EXE_DIRNAME);
 
+        fprintf(stderr,"%s not accessible, trying TEMPLATE_PREFIX=%s\n",original,TEMPLATE_PREFIX);
         if( access( TEMPLATE_PREFIX, F_OK) == -1 ) {
             fprintf(stderr, "gadget init: template prefix '%s' doesn't exist.\n", original);
             if(TEMPLATE_PREFIX) free(TEMPLATE_PREFIX);
             TEMPLATE_PREFIX=original;
-            return -1;
+            ret=-1;
+            goto _return;
         }
     }
 
-    return 0;
+_return:
+    free(tmp);
+    return ret;
 }
 
 void deinitialize()
