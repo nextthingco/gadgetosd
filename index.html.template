@@ -1,0 +1,102 @@
+<html>
+
+<!-- The line below defines the file structure and thus the variables available -->
+<!-- PATH_STRUCTURE: branch/build:d/flavor/file -->
+
+<head>
+    <title> Hello </title>
+
+    <style>
+    @import 'https://fonts.googleapis.com/css?family=Roboto:300,400,500';
+    
+    body {
+        margin: 0 auto;
+        max-width: 50em;
+        font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+        line-height: 1.5;
+        padding: 4em 1em;
+        color: #566b78;
+    } h2 {
+        margin-top: 1em;
+        padding-top: 1em;
+    }
+    
+    h1,
+    h2,
+    strong {
+        color: #333;
+    }
+    
+    code,
+    pre {
+      background: #f5f7f9;
+      border-bottom: 1px solid #d8dee9;
+      color: #a7adba;
+    }
+    
+    code {
+      padding: 2px 4px;
+      vertical-align: text-bottom;
+    }
+    
+    pre {
+      padding: 1em;
+      border-left: 2px solid #69c;
+    }
+    
+    a {
+      color: #e81c4f;
+    }
+    
+    table {
+    color: #333; /* Lighten up font color */
+    font-family: Helvetica, Arial, sans-serif; /* Nicer font */
+    width: 640px;
+    border-collapse:
+    collapse; border-spacing: 0;
+    }
+    
+    td, th { border: 1px solid #CCC; height: 30px; } /* Make cells a bit taller */
+    
+    th {
+    background: #F3F3F3; /* Light grey background */
+    font-weight: bold; /* Make sure they're bold */
+    }
+    
+    td {
+    background: #FAFAFA; /* Lighter grey background */
+    text-align: center; /* Center our text */
+    }
+    </style>
+</head>
+
+<body>
+    <h1>{{ project }}</h1>
+
+{% for branch in artifacts %}
+    <h2>{{ branch }}</h2>
+
+    <table>
+    <tr>
+    <th>build</th>
+    {% for flavor in flavors %}
+    <th>{{ flavor }}</th>
+    {% endfor %}
+    </tr>
+    
+    {% for build in artifacts[branch] | sort %}
+    <tr>
+        <td>{{ build }}</td>
+        {% for flavor in flavors %}
+        <td>
+            {% for artifact in artifacts[branch][build][flavor] %}
+            <a href="{{ branch }}/{{ build }}/{{ flavor }}/{{ artifact }}">{{ artifact }}</a><br/>
+            {% endfor %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </table>
+{% endfor %}
+</body>
+</html>
