@@ -178,6 +178,7 @@ int gadget_deploy(int argc,char **argv)
     char   *project_path=NULL;
     char   *payload_path=NULL;
     gadget_project_t *project=0;
+    subprocess_t *p;
     char   *tmpstr=0;
 
     while (1)
@@ -239,19 +240,42 @@ int gadget_deploy(int argc,char **argv)
         goto _return;
     }
 
-    if(!(project=gadget_project_deserialize("%s/.gadget/config",project_path))) {
-        xprint(ERROR,"gadget build: ERROR: cannot read project file: '%s/.gadget/config'\n",project_path);
+    if(!(project=gadget_project_deserialize("%s/%s",project_path, GADGET_CONFIG_FILE))) {
+        xprint(ERROR,"gadget deploy: ERROR: cannot read project file: '%s/%s'\n",project_path, GADGET_CONFIG_FILE);
+        ret=1;
         goto _return;
     }
 
-    if(asprintf(&payload_path,"%s/%s_%s.tar",project_path,project->name,project->id)<0)
-    {
-        xprint(ERROR,"gadget build: ERROR: asprintf returned negative value\n");
+    // rebuild container image, just in case...
+    gadget_project_build(project);
+
+    char *tmpdir=0;
+    asprintf(&tmpdir,"/tmp/gadget_build_XXXXXX");
+    xprint(VERBOSE,"mkdtemp('%s'): ",tmpdir);
+    if(!mkdtemp(tmpdir)) {
+        xprint(ERROR,"gadget deploy: ERROR: cannot create directory '%s'\n",tmpdir);
+        ret=1;
         goto _return;
     }
+    xprint(VERBOSE,"%s\n",tmpdir);
+    if(asprintf(&payload_path,"%s/%s_%s.tar",tmpdir,project->name,project->id)<0)
+    {
+        xprint(ERROR,"gadget deploy: ERROR: asprintf returned negative value\n");
+        goto _return;
+    }
+
+    xprint(VERBOSE,"creating %s\n",payload_path);
+    p=subprocess_run_gw("docker","save",project->container_image_name,"-o",payload_path,0);
+    if(p->exit) {
+        xprint(ERROR,"gadget build: ERROR: start subprocess '%s' failed:\n\n",p->cmdline);
+        xprint(ERROR,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+        goto _return;
+    }
+    xprint(VERBOSE,"%s\n%s%s\n", p->cmdline, p->out, p->err);
+    subprocess_free(p); p=0;
 
     if(!xis_file(payload_path)) {
-        xprint(ERROR,"gadget build: ERROR: cannot read: '%s'\n",payload_path);
+        xprint(ERROR,"gadget deploy: ERROR: cannot read: '%s'\n",payload_path);
         ret=1;
         goto _return;
     }
@@ -271,7 +295,7 @@ int gadget_deploy(int argc,char **argv)
     while (s_exit_flag == 0) { mg_mgr_poll(&mgr, 1000); xprint(NORMAL,".", project->name); }
 
     do_rpc(ENDPOINT_APPLICATION_CREATE,project); xprint(NORMAL,".");
-    do_rpc(ENDPOINT_APPLICATION_START,project);  xprint(NORMAL,"done!");
+    do_rpc(ENDPOINT_APPLICATION_START,project);  xprint(NORMAL,"done!\n");
 
     mg_mgr_free(&mgr);
 

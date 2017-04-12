@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
+#include <string.h>
 #include "utils.h"
 
-#ifndef _WIN32
+#ifndef __CYGWIN__
 char* GADGETOSD_SERVER  = "192.168.81.1";
 #else
 char* GADGETOSD_SERVER  = "192.168.82.1";
@@ -24,6 +25,7 @@ char* ENDPOINT_APPLICATION_STATUS  = "/api/v0/application/status";
 char* EXE_PATH                     = "initialize me!";
 char* EXE_DIRNAME                  = "initialize me!";
 char* TEMPLATE_PREFIX              = "initialize me!";
+char* GADGET_CONFIG_FILE           = "gadget.cfg";
 
 int   _VERBOSE                     = 0;
 
@@ -32,6 +34,7 @@ int   _VERBOSE                     = 0;
 int initialize()
 {
     int ret=0;
+
     if(getenv("GADGETOSD_SERVER")) GADGETOSD_SERVER = getenv("GADGETOSD_SERVER");
     if(getenv("GADGETOSD_PORT"))   GADGETOSD_PORT   = getenv("GADGETOSD_PORT");
 
@@ -48,7 +51,7 @@ int initialize()
 
         fprintf(stderr,"%s not accessible, trying TEMPLATE_PREFIX=%s\n",original,TEMPLATE_PREFIX);
         if( access( TEMPLATE_PREFIX, F_OK) == -1 ) {
-            fprintf(stderr, "gadget init: template prefix '%s' doesn't exist.\n", original);
+            xprint(ERROR, "gadget init: template prefix '%s' doesn't exist.\n", original);
             if(TEMPLATE_PREFIX) free(TEMPLATE_PREFIX);
             TEMPLATE_PREFIX=original;
             ret=-1;

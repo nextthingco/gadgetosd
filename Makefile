@@ -65,6 +65,8 @@ gadget_delete.o \
 gadget_purge.o \
 gadget_deploy.o \
 gadget_status.o \
+gadget_shell.o \
+docker.o
 
 
 %.o: %.c
@@ -95,4 +97,4 @@ test_utils: test_utils.o utils.o config.o libmongoose.a libinih.a
 	@echo "  > Building $@"
 	$(CC) -o test_utils test_utils.o utils.o config.o $(CFLAGS) $(LIBS)
 clean:
-	rm *.o *.a gadget gadgetosd
+	rm -rf *.o *.a gadget gadgetosd

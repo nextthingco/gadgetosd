@@ -29,6 +29,7 @@ extern int gadget_start(int argc, char **argv);
 extern int gadget_delete(int argc, char **argv);
 extern int gadget_purge(int argc, char **argv);
 extern int gadget_status(int argc, char **argv);
+extern int gadget_shell(int argc, char **argv);
 
 command commands[] = {
     { "--help", gadget_help },
@@ -43,6 +44,7 @@ command commands[] = {
     { "delete", gadget_delete },
     { "purge",  gadget_purge },
     { "status", gadget_status },
+    { "shell",  gadget_shell },
     { 0, 0 }
 };
 
@@ -74,27 +76,28 @@ _return:
 
 int gadget_help(int argc, char **argv)
 {
-    printf(
-"Create embedded Linux apps - easy.\n"
-"\n"
-"usage: gadget <command> [<args>]\n"
-"\n"
-"common gadget commands: \n"
-"  init        Create an empty gadget project \n"
-"  build       Build the project in the current directory\n"
-"  deploy      Deploys the project in the current directory\n"
-"  start       Starts the application on a device\n"
-"  stop        Stops the application running on a device\n"
-"  delete      Deletes the application instance from a device\n"
-"  purge       Purges the application from a device\n"
-"  status      Shows status information\n"
-"\n"
-"optional arguments:\n"
-"  -h, --help  show this help message and exit\n"
-"\n"
-"get help for specific command:\n"
-"  gadget <command> --help\n"
-);
+  xprint(NORMAL,
+         "Gadget v%d.%d.%d Create embedded Linux apps - easy.\n"
+         "\n"
+         "usage: gadget <command> [<args>]\n"
+         "\n"
+         "common gadget commands: \n"
+         "  init        Create an empty gadget project \n"
+         "  build       Build the project in the current directory\n"
+         "  deploy      Deploys the project in the current directory\n"
+         "  start       Starts the application on a device\n"
+         "  stop        Stops the application running on a device\n"
+         "  delete      Deletes the application instance from a device\n"
+         "  purge       Purges the application from a device\n"
+         "  status      Shows status information\n"
+         "  shell       Start debugging shell to investigate container\n"
+         "\n"
+         "optional arguments:\n"
+         "  -h, --help  show this help message and exit\n"
+         "\n"
+         "get help for specific command:\n"
+         "  gadget <command> --help\n",
+         GADGETOSD_MAJOR, GADGETOSD_MINOR, GADGETOSD_PATCH);
 
-    return 0;
+  return 0;
 }

@@ -9,11 +9,16 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <errno.h>
+#include <limits.h>
 
 #include "gadget_project.h"
 #include "utils.h"
 #include "config.h"
 #include "ini.h"
+#include "docker.h"
 
 
 //helper function
@@ -87,7 +92,7 @@ int gadget_project_serialize( char* filename, gadget_project_t* p )
             "id = %s\n",
             p->name,
             p->id
-    );  
+    );
     fclose(f);
 
     return 0;
@@ -132,13 +137,15 @@ gadget_project_t* gadget_project_deserialize( char* filenameformat, ... )
         goto _error;
     }
 
+    p->path=dirname(dirname(strdup(filename)));
+
     if(!(p->name) || !strlen(p->name) || !(p->id) || !strlen(p->id)) {
         xprint(ERROR,"gadget_project_deserialize(): incompatible project file '%s'\n",filename);
         goto _error;
     } else {
         xprint(VERBOSE,"gadget_project_deserialize(): project loaded from '%s': name=%s, id=%s\n",
             filename, p->name, p->id );
-    }   
+    }
 
     if(!gadget_project_container_name(p)) goto _error;
     if(!gadget_project_container_image_name(p)) goto _error;
@@ -151,4 +158,33 @@ _error:
 _return:
     if(filename) free(filename);
     return p;
+}
+
+int gadget_project_build( gadget_project_t *self )
+{
+    int ret=0;
+    char *tmpstr=0;
+    docker_t *docker=0;
+
+    docker=docker_initialize();
+
+    //TODO: fix this up. Right now all templates (hardcoded in here) are built all the time...
+    asprintf(&tmpstr,"%s/alpine",TEMPLATE_PREFIX);
+    xprint(VERBOSE,"building template from '%s'\n",tmpstr);
+    if(docker_build(0,tmpstr,"gadget_template_alpine")) {
+        xprint(ERROR,"gadget build: ERROR: cannot build template: '%s'\n",tmpstr);
+        ret=1;
+        goto _return;
+    }
+
+    if(docker_build(0,self->path,self->container_image_name)) {
+        xprint(ERROR,"gadget build: ERROR: cannot build container image: '%s'\n",tmpstr);
+        ret=1;
+        goto _return;
+    }
+
+_return:
+    if(docker) docker_free(docker);
+
+    return ret;
 }

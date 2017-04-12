@@ -128,7 +128,7 @@ int gadget_init(int argc, char **argv)
     //xcp("/usr/local/share/gadget/templates/alpine/rootfs.tar.gz",target_dir);
 
     // q'n'd fix:
-    asprintf(&cmd,"cp -va %s/alpine/* %s/",TEMPLATE_PREFIX,target_dir);
+    asprintf(&cmd,"cp -va %s/blink-leds/* %s/",TEMPLATE_PREFIX,target_dir);
     FILE* proc = popen(cmd, "r");
     int status = pclose(proc);
     if(status < 0) {
@@ -142,7 +142,7 @@ int gadget_init(int argc, char **argv)
         xprint(ERROR, "gadget init: internal error creating project\n");
         ret=1; goto _return;
     }
-    asprintf(&tmpstr,"%s/.gadget/config",target_dir);
+    asprintf(&tmpstr,"%s/%s",target_dir, GADGET_CONFIG_FILE);
 
     if(gadget_project_serialize(tmpstr,project)<0) {
         xprint(ERROR, "gadget init: cannot write project file\n");
