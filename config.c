@@ -21,6 +21,7 @@ char* ENDPOINT_APPLICATION_STOP    = "/api/v0/application/stop";
 char* ENDPOINT_APPLICATION_DELETE  = "/api/v0/application/delete";
 char* ENDPOINT_APPLICATION_PURGE   = "/api/v0/application/purge";
 char* ENDPOINT_APPLICATION_STATUS  = "/api/v0/application/status";
+char* ENDPOINT_APPLICATION_LOG     = "/api/v0/application/log";
 
 char* EXE_PATH                     = "initialize me!";
 char* EXE_DIRNAME                  = "initialize me!";

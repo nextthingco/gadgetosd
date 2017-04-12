@@ -30,6 +30,7 @@ extern int gadget_delete(int argc, char **argv);
 extern int gadget_purge(int argc, char **argv);
 extern int gadget_status(int argc, char **argv);
 extern int gadget_shell(int argc, char **argv);
+extern int gadget_log(int argc, char **argv);
 
 command commands[] = {
     { "--help", gadget_help },
@@ -45,6 +46,7 @@ command commands[] = {
     { "purge",  gadget_purge },
     { "status", gadget_status },
     { "shell",  gadget_shell },
+    { "log",    gadget_log },
     { 0, 0 }
 };
 
@@ -91,6 +93,7 @@ int gadget_help(int argc, char **argv)
          "  purge       Purges the application from a device\n"
          "  status      Shows status information\n"
          "  shell       Start debugging shell to investigate container\n"
+         "  log         Show container log\n"
          "\n"
          "optional arguments:\n"
          "  -h, --help  show this help message and exit\n"
