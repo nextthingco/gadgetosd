@@ -46,7 +46,7 @@ build:
 
 mac-build:
   stage: build
-  tags: [alex-mac]
+  tags: [mac]
   script:
     - mkdir build
     - cd build
@@ -73,6 +73,12 @@ mac-build:
       -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
       -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
       --rm $CI_TOOLS_CONTAINER ci-s3-cleanup s3://opensource.nextthing.co/githost/gadgetosd/${CI_BUILD_REF_SLUG}
+    - docker run
+      -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
+      -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
+      -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
+      --rm $CI_TOOLS_CONTAINER ci-s3-generate-dl-page s3://opensource.nextthing.co/githost/gadgetosd
+
 
 
 win-build:
