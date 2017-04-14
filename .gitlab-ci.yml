@@ -85,12 +85,15 @@ mac-build:
 
 win-build:
   stage: build
-  tags: [ec2-msys2-git4win]
+  tags: [onsite-win10-001]
   script:
-    - set %MSYS2_EXEC% "pacman -Sy --noconfirm gcc make cmake msys/libutil-linux-devel"
-    - set %MSYS2_EXEC% "mkdir build"
-    - set %MSYS2_EXEC% "cd build && cmake .. && make"
-    - set %MSYS2_EXEC% "ls build/*"
+    - set PATH=%PATH%;C:/git-sdk-64/mingw64/bin;C:/git-sdk-64/usr/bin& set MSYSTEM=MINGW64& set MSYS2_PATH_TYPE=inherit
+    - C:/git-sdk-64/usr/bin/bash -c "pushd windows-msys && ./setup.sh"
+    - C:/git-sdk-64/usr/bin/bash -c "pushd windows-msys && ./build.sh"
+    #- set %MSYS2_EXEC% "pacman -Sy --noconfirm gcc make cmake msys/libutil-linux-devel"
+    #- set %MSYS2_EXEC% "mkdir build"
+    #- set %MSYS2_EXEC% "cd build && cmake .. && make"
+    #- set %MSYS2_EXEC% "ls build/*"
     #~ - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}
     #~ - docker pull $CI_TOOLS_CONTAINER
     #~ - docker run

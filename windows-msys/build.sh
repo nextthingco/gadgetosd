@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 win_build_dir="${PWD}"
 src="${win_build_dir}/../"
