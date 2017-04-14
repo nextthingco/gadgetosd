@@ -72,7 +72,7 @@ dlls_for_exes () {
 	echo "$dlls"
 }
 
-gadgetBin="usr/bin/gadget.exe"
+gadgetBin="${ntc_pwd}/gadget.exe"
 gadgetDockerStart="${ntc_pwd}/docker_start"
 gadgetProfileD="${ntc_pwd}/gadget_init_docker.sh"
 gadgetTemplates="$(pushd / > /dev/null && find usr/share/gadget/templates && popd > /dev/null)"

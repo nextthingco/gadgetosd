@@ -10,7 +10,7 @@ pushd build
 cmake ${src}
 make
 
-cp gadget.exe ../
+cp gadget.exe ../sdk-installer
 
 popd
 
