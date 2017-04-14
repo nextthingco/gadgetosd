@@ -1,0 +1,39 @@
+spec-version: 1.0                         # set as default
+name: project name
+
+containers:
+  - MyWebServer
+  - MyGPIOBopper
+
+MyWebServer:
+  name: my-web-server
+  id: DC6C44E8-DA2B-4187-91F1-BCD839A8B555  # uuid type doesn't matter in this example
+  type: docker
+  restart: always
+  privileges:
+    sys_chroot: false
+    net_admin: true
+
+MyGPIOBopper:
+  name: my-gui-bopper
+  id: 00EFD3F6-7CF3-49BB-B548-FC0EF4342AC1
+  type: docker
+  restart: always #not docker specific
+  volumes:
+    - from: /sys
+      to: /sys                              # 'to' here defaults to 'from' as set above and so is optional
+      read-only: false                      # default to false
+  devices:
+    - from: /dev/mem
+      to: /dev/mem                          # 'to' here defaults to 'from' as set above and so is optional
+      read: true                            # default to true
+      write: true                           # default to true
+      mknod: true                          # default to true
+    - from: /dev/mem
+      to: /dev/mem                          # 'to' here defaults to 'from' as set above and so is optional
+      read: true                            # default to true
+      write: true                           # default to true
+      mknod: false                          # default to true
+  privileges:
+    sys_raw_io: true
+    net_admin: true
