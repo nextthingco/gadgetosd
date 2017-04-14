@@ -3,7 +3,7 @@
 win_build_dir="${PWD}"
 src="${win_build_dir}/../"
 
-pushd sdk-installer
+pushd gadget-shell/sdk-installer
 mkdir build
 pushd build
 
