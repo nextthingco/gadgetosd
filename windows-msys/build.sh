@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 win_build_dir="${PWD}"
-src="${win_build_dir}/../"
+src="${win_build_dir}/.."
 
 pushd gadget-shell/sdk-installer
 mkdir build
@@ -11,7 +11,7 @@ cmake ${src}
 make
 
 cp gadget.exe ${win_build_dir}/sdk-installer
-cp -a ${src}/templates ${win_build_dir}/sdk-installer
+cp -a ${src}/templates ${win_build_dir}/sdk-installer/
 cp rootfs.tar.gz ${win_build_dir}/sdk-installer/templates/alpine
 
 popd
