@@ -47,10 +47,9 @@ command commands[] = {
 };
 
 
-int main(int argc, char **argv)
+int main2(int argc, char **argv)
 {
     int i=0,ret=0;
-
     initialize();
 
     if(argc<2) {
