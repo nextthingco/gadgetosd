@@ -17,3 +17,8 @@ cp rootfs.tar.gz ${win_build_dir}/gadget-shell/sdk-installer/templates/alpine
 popd
 
 ./release.sh 1.0 master
+
+popd
+
+mkdir win
+mv /c/Windows/system32/config/systemprofile/gadget-shell-installer-1.0-64.7z.exe win/
