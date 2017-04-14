@@ -1,7 +1,9 @@
 CC=gcc
+CPP=g++
 AR=ar
-CFLAGS=-I. -O2 -std=c11 -Wall -g -D_GNU_SOURCE
-LIBS=-L. -lmongoose -linih
+CFLAGS=-I. -O0 -std=c11 -Wall -g -D_GNU_SOURCE  -static -pthread 
+CPPFLAGS=-I. -Iinclude -O0  -Wall -g -std=c++14 -static -pthread 
+LIBS=-L. -lmongoose -linih -Llib -lyaml-cpp -lpthread -static -lboost_system  -static -lboost_log -static -lboost_thread -static -lboost_filesystem
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
 ifeq ($(OS),Windows_NT)
@@ -67,20 +69,34 @@ gadget_deploy.o \
 gadget_status.o \
 docker.o
 
+CPP_OBJ = Container.o \
+Device.o \
+DockerContainer.o \
+Project.o \
+ProjectFactory.o \
+Volume.o \
+Gadget.o \
+Helpers.o
+
+
+%.o: %.cpp
+	@echo "  > Building $@"
+	$(CPP) $(CPPFLAGS) -c -o $@ $< 
 
 %.o: %.c
 	@echo "  > Building $@"
 	$(CC) -c -o $@ $< $(CFLAGS) $(MONGOOSE_FLAGS)
 
+
 all: gadgetosd gadget
 
 gadgetosd: $(GOSD_OBJ) libmongoose.a libinih.a
 	@echo "  > Building $@"
-	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
+	$(CPP) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS)  $(LIBS) 
 
-gadget: $(G_OBJ) libmongoose.a libinih.a
+gadget: $(G_OBJ) $(CPP_OBJ) libmongoose.a libinih.a
 	@echo "  > Building $@"
-	$(CC) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
+	$(CPP) -o $@ $^ $(CFLAGS) $(MONGOOSE_FLAGS) $(LIBS)
 
 libmongoose.a: mongoose.c mongoose.h
 	@echo "  > Building $@"
