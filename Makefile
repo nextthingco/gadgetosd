@@ -52,6 +52,7 @@ gadgetosd_api_application_stop.o \
 gadgetosd_api_application_delete.o \
 gadgetosd_api_application_purge.o \
 gadgetosd_api_application_status.o \
+gadgetosd_api_application_log.o \
 
 
 G_OBJ = utils.o \
@@ -67,6 +68,8 @@ gadget_delete.o \
 gadget_purge.o \
 gadget_deploy.o \
 gadget_status.o \
+gadget_shell.o \
+gadget_log.o \
 docker.o
 
 CPP_OBJ = Container.o \
