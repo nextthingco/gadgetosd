@@ -86,7 +86,7 @@ win-build:
   stage: build
   tags: [onsite-win10-001]
   script:
-    - set PATH=%PATH%;C:/git-sdk-64/mingw64/bin;C:/git-sdk-64/usr/bin& set MSYSTEM=MSYS& set MSYS2_PATH_TYPE=inherit
+    - set PATH=%PATH%;C:/git-sdk-64/usr/bin;C:/git-sdk-64/mingw64/bin& set MSYSTEM=MSYS& set MSYS2_PATH_TYPE=inherit
     - C:/git-sdk-64/usr/bin/bash -c "pushd windows-msys && ./setup.sh"
     - C:/git-sdk-64/usr/bin/bash -c "pushd windows-msys && ./build.sh"
     #- set %MSYS2_EXEC% "pacman -Sy --noconfirm gcc make cmake msys/libutil-linux-devel"
