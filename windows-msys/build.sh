@@ -10,7 +10,9 @@ pushd build
 cmake ${src}
 make
 
-cp gadget.exe ../sdk-installer
+cp gadget.exe ${win_build_dir}/sdk-installer
+cp -a ${src}/templates ${win_build_dir}/sdk-installer
+cp rootfs.tar.gz ${win_build_dir}/sdk-installer/templates/alpine
 
 popd
 
