@@ -9,6 +9,8 @@ MyWebServer:
   name: my-web-server
   id: DC6C44E8-DA2B-4187-91F1-BCD839A8B555  # uuid type doesn't matter in this example
   type: docker
+  configFile: Dockerfile-1
+  build:
   restart: always
   privileges:
     sys_chroot: false
@@ -18,6 +20,8 @@ MyGPIOBopper:
   name: my-gui-bopper
   id: 00EFD3F6-7CF3-49BB-B548-FC0EF4342AC1
   type: docker
+  configFile: Dockerfile-2
+  build: make
   restart: always #not docker specific
   volumes:
     - from: /sys

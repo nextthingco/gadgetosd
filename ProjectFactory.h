@@ -19,7 +19,7 @@ public:
 
 	static std::string toYaml(const Project& project);
 
-	static std::shared_ptr<Container> newContainer(const std::string& type, const std::string& name, const std::string& id); //TODO This could be a separate factory, but seems like overkill now
+	static std::shared_ptr<Container> newContainer(const std::string& type, const std::string& name, const std::string& id, const std::string& configFile); //TODO This could be a separate factory, but seems like overkill now
 
 private:
 	ProjectFactory() {} // don't allow instantiation

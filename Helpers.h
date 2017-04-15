@@ -11,6 +11,8 @@
 class Helpers {
 public:
 	static int process(const std::string& command);
+	static std::string findFileHereOrInParent(const std::string & fileName);
+
 };
 
 #endif /* HELPERS_H_ */

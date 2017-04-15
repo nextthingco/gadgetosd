@@ -3,7 +3,8 @@ CPP=g++
 AR=ar
 CFLAGS=-I. -O0 -std=c11 -Wall -g -D_GNU_SOURCE  -static -pthread 
 CPPFLAGS=-I. -Iinclude -O0  -Wall -g -std=c++14 -static -pthread 
-LIBS=-L. -lmongoose -linih -Llib -lyaml-cpp -lpthread -static -lboost_system  -static -lboost_log -static -lboost_thread -static -lboost_filesystem
+LIBS=-L. -lmongoose -linih -Llib -lyaml-cpp -lpthread -static \
+-lboost_system  -static -lboost_log -static -lboost_thread -static -lboost_filesystem -static -lboost_program_options -static -lboost_regex
 MONGOOSE_FLAGS=-DMG_ENABLE_HTTP_STREAMING_MULTIPART
 
 ifeq ($(OS),Windows_NT)
@@ -79,7 +80,9 @@ Project.o \
 ProjectFactory.o \
 Volume.o \
 Gadget.o \
-Helpers.o
+Helpers.o \
+CustomOptionDescription.o \
+OptionPrinter.o
 
 
 %.o: %.cpp

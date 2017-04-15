@@ -8,7 +8,7 @@
  * license GPL v2
  */
 
-#include "yaml-cpp/yaml.h"  // IWYU pragma: keep
+#include "yaml-cpp/yaml.h"
 #include "Project.h"
 #include "Container.h"
 #include "ProjectFactory.h"
@@ -19,10 +19,11 @@
 #include <exception>
 #include <map>
 
-
-using namespace std;
-
-
+/**
+ * Utility function to see if a string contains all lowercase letters
+ * @param s
+ * @return true if lowercase, false if there is an uppercase char
+ */
 bool isLower(const std::string& s) {
 	for (auto c : s) {
 		if (tolower(c) != c)
@@ -37,10 +38,10 @@ bool isLower(const std::string& s) {
  * @param id
  * @return a Container subclass
  */
-std::shared_ptr<Container> ProjectFactory::newContainer(const std::string& type, const std::string& name, const std::string& id)
+std::shared_ptr<Container> ProjectFactory::newContainer(const std::string& type, const std::string& name, const std::string& id, const std::string& configFile)
 {
 	if (type == DOCKER_TYPE) {
-		return std::make_shared<DockerContainer>(name, id);
+		return std::make_shared<DockerContainer>(name, id, configFile);
 	} else {
 		throw YAML::Exception(YAML::Mark::null_mark(),"Unknown container type: " + type);
 	}
@@ -84,6 +85,8 @@ std::string ProjectFactory::toYaml(const Project& project) {
 			out << YAML::Key << "name" << YAML::Value << container->getName();
 			out << YAML::Key << "id" << YAML::Value << container->getId();
 			out << YAML::Key << "type" << YAML::Value << container->getType();
+			out << YAML::Key << "configFile" << YAML::Value << container->getConfigFile();
+			out << YAML::Key << "build" << YAML::Value << container->getBuild();
 			out << YAML::Key << "restart" << YAML::Value << container->getRestart();
 
 			if (!container->m_volumes.empty()) {
@@ -163,12 +166,14 @@ std::shared_ptr<Project> ProjectFactory::fromYaml(std::istream& yaml)
 			}
 			auto type = getRequiredAttribute(containerNode,"type").as<std::string>();
 			auto id = getRequiredAttribute(containerNode,"id").as<std::string>();
-
-
-			//TODO restart value
-
+			auto configFile = getRequiredAttribute(containerNode,"configFile").as<std::string>();
 			// Use abstract factory to create container
-			auto container = newContainer(type, name, id);
+			auto container = newContainer(type, name, id, configFile);
+
+			auto build = containerNode["build"];
+			if (build)
+				container->setBuild(build.as<std::string>());
+
 			auto restart = containerNode["restart"];
 			if (restart)
 				container->setRestart(restart.as<std::string>()); //TODO maybe check for allowed values
@@ -229,28 +234,4 @@ std::shared_ptr<Project> ProjectFactory::fromYaml(std::istream& yaml)
 		std::cerr << e.what() << std::endl;
 		return nullptr;
 	}
-}
-
-extern "C" {
-/**
- * C-accessible for testing
- * @return
- */
-int readYamlConfig()
-{
-	auto proj = ProjectFactory::fromYaml("tests/config.yaml");
-//	std::cout << "Just read config" << std::endl;
-//	auto yaml = ProjectFactory::toYaml(*proj);
-//	std::cout << yaml;
-//	auto yamlIstream = std::istringstream(yaml);
-//	auto proj2 = ProjectFactory::fromYaml(yamlIstream);
-//	auto yaml2 = ProjectFactory::toYaml(*proj2);
-//	if (yaml2 == yaml)
-//		std::cout << "serialization ok" << std::endl;
-//	else
-//		std::cerr << "serialization bad" << std::endl;
-
-
-	return 1;
-}
 }

@@ -13,7 +13,7 @@ const std::string DOCKER_TYPE = "docker";
 
 class DockerContainer: public Container {
 public:
-	DockerContainer(const std::string& name, const std::string& id);
+	DockerContainer(const std::string& name, const std::string& id, const std::string configFile);
 	virtual ~DockerContainer();
 	virtual const std::string& getType() override;
 	virtual int build(const std::string& path="", std::string name="") override;

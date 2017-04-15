@@ -11,8 +11,8 @@
 #include <sstream>
 
 
-DockerContainer::DockerContainer(const std::string& name, const std::string& id)
-	: Container(name,id)
+DockerContainer::DockerContainer(const std::string& name, const std::string& id, const std::string configFile)
+	: Container(name, id, configFile)
 {
 }
 
