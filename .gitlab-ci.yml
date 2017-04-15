@@ -106,7 +106,7 @@ win-build:
       -e GHVAR_AWS_PW=%GHVAR_AWS_PW%
       -e GHVAR_AWS_REGION=%GHVAR_AWS_REGION%
       -e CI_PROJECT_NAME=%CI_PROJECT_NAME%
-      -e CI_BUILD_NAME=%CI_BUILD_NAME%
+      -e CI_BUILD_REF_NAME=%CI_BUILD_REF_NAME%
       -e CI_BUILD_REF_SLUG=%CI_BUILD_REF_SLUG%
       -e CI_BUILD_ID=%CI_PIPELINE_ID%
       --rm -v %cd%:/upload -w /upload
