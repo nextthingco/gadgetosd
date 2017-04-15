@@ -101,6 +101,8 @@ win-build:
 #      --rm -v $PWD/upload -w /upload
 #      $CI_TOOLS_CONTAINER ci-s3-upload
 #      win"
+    - dir
+    - cd
     - docker run
       -e GHVAR_AWS_ID=%GHVAR_AWS_ID%
       -e GHVAR_AWS_PW=%GHVAR_AWS_PW%
