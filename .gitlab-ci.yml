@@ -98,7 +98,7 @@ win-build:
       -e CI_PROJECT_NAME=${CI_PROJECT_NAME}
       -e CI_BUILD_REF_NAME=${CI_BUILD_REF_SLUG}
       -e CI_BUILD_ID=${CI_PIPELINE_ID}
-      --rm -v $PWD/upload -w $PWD/upload
+      --rm -v $PWD/upload -w /upload
       $CI_TOOLS_CONTAINER ci-s3-upload
       win"
     - C:/git-sdk-64/usr/bin/bash -c "docker run
