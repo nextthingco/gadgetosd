@@ -20,5 +20,5 @@ popd
 
 popd
 
-mkdir win
-mv /c/Windows/system32/config/systemprofile/gadget-shell-installer-1.0-64.7z.exe win/
+mkdir ../win
+mv /c/Windows/system32/config/systemprofile/gadget-shell-installer-1.0-64.7z.exe ../win/
