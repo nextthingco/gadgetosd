@@ -8,29 +8,23 @@
  * license GPL v2
  */
 
-#include "yaml-cpp/yaml.h"
+#include "Settings.h"
+#include "Helpers.h"
 #include "Project.h"
 #include "Container.h"
 #include "ProjectFactory.h"
 #include "DockerContainer.h"
+#include "yaml-cpp/yaml.h"
 #include <fstream>
 #include <iostream>
 #include <vector>
 #include <exception>
 #include <map>
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
+#include "boost/filesystem.hpp"
+namespace fs = ::boost::filesystem;
 
-/**
- * Utility function to see if a string contains all lowercase letters
- * @param s
- * @return true if lowercase, false if there is an uppercase char
- */
-bool isLower(const std::string& s) {
-	for (auto c : s) {
-		if (tolower(c) != c)
-			return false;
-	}
-	return true;
-}
 /**
  * Abstract Factory method to create appropriate container type. This is a bit out of place here.
  * @param name
@@ -71,14 +65,12 @@ std::string ProjectFactory::toYaml(const Project& project) {
 	out << YAML::BeginMap;
 	out << YAML::Key << "spec-version" << YAML::Value << project.m_specVersion;
 	out << YAML::Key << "name" << YAML::Value << project.m_name;
-	out <<  "hello \n";
 	if (!project.m_containers.empty()) {
 		out << YAML::Key << "containers" << YAML::BeginSeq;
 		for (auto container : project.m_containers) {
 			out << container->m_name;
 		}
 		out << YAML::EndSeq;
-		out << YAML::Literal << "\n";
 
 		for (auto container : project.m_containers) {
 			out << YAML::Key << container->m_name << YAML::BeginMap;
@@ -138,6 +130,7 @@ std::shared_ptr<Project> ProjectFactory::fromYaml(const std::string& fileName)
 	return fromYaml(yaml);
 }
 
+
 /**
  *
  * @param yaml istream with yaml body
@@ -158,17 +151,17 @@ std::shared_ptr<Project> ProjectFactory::fromYaml(std::istream& yaml)
 			// Extract the Node corresponding to the container and get its primary attributes
 			auto containerNode = getRequiredAttribute(config,c->as<std::string>());
 			auto name = getRequiredAttribute(containerNode,"name").as<std::string>();
-			if (name.empty()) {
-				throw YAML::Exception(YAML::Mark::null_mark(),"Container name must not be empty");
-			} else if (!isLower(name)) {
-				throw YAML::Exception(YAML::Mark::null_mark(),"Container name: '" + name + "' must be all lower-case");
-
-			}
 			auto type = getRequiredAttribute(containerNode,"type").as<std::string>();
 			auto id = getRequiredAttribute(containerNode,"id").as<std::string>();
 			auto configFile = getRequiredAttribute(containerNode,"configFile").as<std::string>();
 			// Use abstract factory to create container
 			auto container = newContainer(type, name, id, configFile);
+			if (name.empty()) {
+				throw YAML::Exception(YAML::Mark::null_mark(),"Container name must not be empty");
+			} else if (!container->isValidName(name)) { // docker containers must be all lowercase, so let's just make this the norm
+				throw YAML::Exception(YAML::Mark::null_mark(),"Container name: '" + name + "' must be all lower-case");
+
+			}
 
 			auto build = containerNode["build"];
 			if (build)
@@ -234,4 +227,16 @@ std::shared_ptr<Project> ProjectFactory::fromYaml(std::istream& yaml)
 		std::cerr << e.what() << std::endl;
 		return nullptr;
 	}
+}
+
+std::shared_ptr<Project>  ProjectFactory::init(const std::string& fileName) {
+	std::cout << "This utility will walk you through creating a gadget.yaml file." << std::endl;
+	auto projectName = Helpers::prompt("Project Name", fs::current_path().filename().string());
+	auto containerName = Helpers::prompt("Container Name", boost::to_lower_copy<std::string>(projectName), Helpers::isLowerCase);
+	auto project = std::make_shared<Project>(projectName, Settings::SPEC_VERSION);
+	auto container = newContainer(DOCKER_TYPE, containerName, Helpers::makeUuid(), "Dockerfile");
+	project->m_containers.push_back(container);
+	auto yaml = std::ofstream(fileName);
+	yaml << toYaml(*project);
+	return project;
 }

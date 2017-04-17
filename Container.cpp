@@ -37,6 +37,10 @@ bool Container::createPayloadDirectory() {
 	return pimpl->createPayloadDirectory();
 }
 
+bool Container::isValidName(const std::string& name) {
+	return true;
+}
+
 Container::~Container() {
 }
 

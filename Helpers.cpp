@@ -9,6 +9,10 @@
 #include <boost/process.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/uuid/uuid.hpp>            // uuid class
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+#include <boost/lexical_cast.hpp>
 #include <iostream>
 
 namespace fs = ::boost::filesystem;
@@ -42,33 +46,57 @@ int Helpers::process(const std::string& command) {
 	return process.exit_code();
 }
 
-/**
- * hidden(hence static) helper function to recursively search for a file going up to parent each time
- * @param fileName
- * @param path
- * @return path found
- * @throws runtime error if not found
- */
-static fs::path _findFileHereOrInParent(const std::string & fileName, fs::path path) {
-	if (path.empty())
-		throw std::runtime_error("Could not find " + fileName);
-
-	path = fs::canonical(path); // to handle symlinks (do we want this?)
-	auto parent = path.parent_path(); // save off parent path for later recursion if needed
-	path /= fileName; // append fileName
-
-	if (fs::is_regular_file(path))
-		return path.c_str();
-	return _findFileHereOrInParent(fileName, parent); // not found, so check parent
-}
 
 /**
- * Find a file either in current directory, or recursively in parent directories
+ * Find a file either in current directory, or in a parent directory
  * @param fileName
- * @return path (as string) of found file
- * @throws std::exception if not found
+ * @param where root of where to search (optional). If omitted, uses current working directory
+ * @return path (as string) of found file, or empty string if not found
  */
-std::string Helpers::findFileHereOrInParent(const std::string & fileName) {
-	auto path = _findFileHereOrInParent(fileName, fs::current_path());
-	return path.c_str();
+std::string Helpers::findFileHereOrInParent(const std::string & fileName, const char * where) {
+	for (auto path = where ? fs::path(where): fs::current_path(); !path.empty(); path = path.parent_path()) {
+		auto filePath = path / fileName;
+		if (fs::is_regular_file(filePath))
+			return filePath.string();
+	}
+	return "";
 }
+
+std::string Helpers::prompt(const std::string& message, const std::string& defaultValue, bool (*validationFunc)(const std::string& val)) {
+	bool ok = false;
+	std::string userValue;
+	while (!ok) {
+		std::cout << message << ": ";
+		if (!defaultValue.empty())
+			std::cout << "(" << defaultValue << ") ";
+		std::getline(std::cin,userValue);
+		boost::trim(userValue);
+		if (userValue.empty())
+			userValue = defaultValue;
+		if (validationFunc) {
+			try {
+				ok = validationFunc(userValue);
+			} catch (std::runtime_error & e) {
+				std::cout << e.what() << std::endl;
+			}
+		} else {
+			ok = true;
+		}
+	}
+	return userValue;
+}
+
+bool Helpers::isLowerCase(const std::string& name)
+{
+	auto ok = boost::to_lower_copy<std::string>(name) == name;
+	if (!ok) {
+		throw std::runtime_error("The value must be all lower case");
+	}
+	return ok;
+}
+
+std::string Helpers::makeUuid() {
+	boost::uuids::uuid uuid = boost::uuids::random_generator()();
+	return boost::lexical_cast<std::string>(uuid);
+}
+

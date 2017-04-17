@@ -16,6 +16,7 @@ class ProjectFactory
 public:
 	static std::shared_ptr<Project> fromYaml(std::istream& yaml);
 	static std::shared_ptr<Project> fromYaml(const std::string& fileName);
+	static std::shared_ptr<Project> init(const std::string& fileName);
 
 	static std::string toYaml(const Project& project);
 

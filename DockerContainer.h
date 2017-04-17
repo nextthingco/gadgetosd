@@ -18,6 +18,8 @@ public:
 	virtual const std::string& getType() override;
 	virtual int build(const std::string& path="", std::string name="") override;
 	virtual int save(const std::string& path) override;
+	virtual bool isValidName(const std::string& name) override;
+
 };
 
 #endif /* DOCKERCONTAINER_H_ */

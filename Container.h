@@ -23,7 +23,7 @@ public:
 	virtual const std::string& getType()=0; // makes this class abstract
 	virtual int build(const std::string& path="", std::string name="")=0;
 	virtual int save(const std::string& path)=0;
-
+	virtual bool isValidName(const std::string& name);
 
 	const std::string& getId() const {
 		return m_id;

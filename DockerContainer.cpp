@@ -9,6 +9,7 @@
 #include "Helpers.h"
 #include <iostream>
 #include <sstream>
+#include <boost/algorithm/string.hpp>
 
 
 DockerContainer::DockerContainer(const std::string& name, const std::string& id, const std::string configFile)
@@ -35,4 +36,8 @@ int DockerContainer::build(const std::string& path, std::string name)
 int DockerContainer::save(const std::string& path) {
 	std::string command = "docker save " + m_name + " -o " + path;
 	return Helpers::process(command);
+}
+
+bool DockerContainer::isValidName(const std::string& name) {
+	return Helpers::isLowerCase(name);
 }

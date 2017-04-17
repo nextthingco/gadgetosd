@@ -82,7 +82,8 @@ Volume.o \
 Gadget.o \
 Helpers.o \
 CustomOptionDescription.o \
-OptionPrinter.o
+OptionPrinter.o \
+Settings.o
 
 
 %.o: %.cpp
