@@ -63,7 +63,8 @@ mac-build:
       -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
       -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
       -e CI_PROJECT_NAME=${CI_PROJECT_NAME}
-      -e CI_BUILD_REF_NAME=${CI_BUILD_REF_SLUG}
+      -e CI_BUILD_REF_NAME=${CI_BUILD_REF_NAME}
+      -e CI_BUILD_REF_SLUG=${CI_BUILD_REF_SLUG}
       -e CI_BUILD_ID=${CI_PIPELINE_ID}
       --rm -v $PWD:/upload -w /upload
       $CI_TOOLS_CONTAINER ci-s3-upload
@@ -92,16 +93,6 @@ win-build:
     - C:/git-sdk-64/usr/bin/bash -c "pushd windows-msys && ./build.sh"
     - C:/git-sdk-64/usr/bin/bash -c "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN ${CI_REGISTRY}"
     - C:/git-sdk-64/usr/bin/bash -c "docker pull $CI_TOOLS_CONTAINER"
-#    - C:/git-sdk-64/usr/bin/bash -c "docker run
-#      -e GHVAR_AWS_ID=${GHVAR_AWS_ID}
-#      -e GHVAR_AWS_PW=${GHVAR_AWS_PW}
-#      -e GHVAR_AWS_REGION=${GHVAR_AWS_REGION}
-#      -e CI_PROJECT_NAME=${CI_PROJECT_NAME}
-#      -e CI_BUILD_REF_NAME=${CI_BUILD_REF_SLUG}
-#      -e CI_BUILD_ID=${CI_PIPELINE_ID}
-#      --rm -v $PWD/upload -w /upload
-#      $CI_TOOLS_CONTAINER ci-s3-upload
-#      win"
     - dir
     - cd
     - docker run --privileged
