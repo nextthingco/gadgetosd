@@ -103,7 +103,7 @@ win-build:
 #      win"
     - dir
     - cd
-    - docker run
+    - docker run --privileged
       -e GHVAR_AWS_ID=%GHVAR_AWS_ID%
       -e GHVAR_AWS_PW=%GHVAR_AWS_PW%
       -e GHVAR_AWS_REGION=%GHVAR_AWS_REGION%
