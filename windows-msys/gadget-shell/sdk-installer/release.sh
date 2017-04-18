@@ -75,7 +75,7 @@ dlls_for_exes () {
 gadgetBin="usr/bin/gadget.exe"
 gadgetDockerStart="usr/bin/docker_start"
 gadgetProfileD="etc/profile.d/gadget_init_docker.sh"
-gadgetTemplates="$(find usr/share/gadget)"
+gadgetTemplates="$(pushd / > /dev/null && find usr/share/gadget/templates && popd > /dev/null)"
 
 fileList="etc/nsswitch.conf \
 	etc/pacman.conf \
