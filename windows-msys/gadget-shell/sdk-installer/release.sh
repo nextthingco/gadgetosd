@@ -72,10 +72,10 @@ dlls_for_exes () {
 	echo "$dlls"
 }
 
-gadgetBin="${ntc_pwd}/gadget.exe"
-gadgetDockerStart="${ntc_pwd}/docker_start"
-gadgetProfileD="${ntc_pwd}/gadget_init_docker.sh"
-gadgetTemplates="$(find ${ntc_pwd}/templates)"
+gadgetBin="usr/bin/gadget.exe"
+gadgetDockerStart="usr/bin/docker_start"
+gadgetProfileD="etc/profile.d/gadget_init_docker.sh"
+gadgetTemplates="$(find usr/share/gadget)"
 
 fileList="etc/nsswitch.conf \
 	etc/pacman.conf \
