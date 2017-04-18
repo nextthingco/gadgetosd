@@ -19,7 +19,7 @@ mkdir -p /usr/share/gadget
 cp -a ${src}/templates /usr/share/gadget/
 cp rootfs.tar.gz /usr/share/gadget/templates/alpine/
 cp ${win_build_dir}/gadget-shell/sdk-installer/docker_start /usr/bin/
-cp ${win_build_dir}/gadget-shell/sdk-installer/gadget_init_docker.sh /etc/profile.d/
+cp ${win_build_dir}/gadget-shell/sdk-installer/gadget_init_* /etc/profile.d/
 
 popd
 
