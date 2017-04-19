@@ -79,7 +79,7 @@ etc/profile.d/gadget_init_010_docker.sh \
 etc/profile.d/gadget_init_900_welcome.sh"
 ls -lsah /usr/share/gadget
 ls -lsah /usr/share/gadget/templates
-gadgetTemplates="$(pushd / > /dev/null && find usr/share/gadget/templates && popd > /dev/null)"
+gadgetTemplates="$(pushd / > /dev/null && /usr/bin/find usr/share/gadget/templates && popd > /dev/null)"
 
 fileList="etc/nsswitch.conf \
 	etc/pacman.conf \
